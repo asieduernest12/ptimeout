@@ -9,7 +9,7 @@ A simple command-line tool for running a command with a timeout. It can also pro
 To install `ptimeout` on your system, run the `install.sh` script:
 
 ```bash
-bash install.sh
+bash scripts/install.sh
 ```
 
 This will install the necessary dependencies into a virtual environment and create a `ptimeout` command in `/usr/local/bin` or `~/.local/bin`.
@@ -19,7 +19,7 @@ This will install the necessary dependencies into a virtual environment and crea
 To uninstall `ptimeout`, run the `uninstall.sh` script:
 
 ```bash
-bash uninstall.sh
+bash scripts/uninstall.sh
 ```
 
 This will remove the `ptimeout` command and optionally the virtual environment.
@@ -29,7 +29,7 @@ This will remove the `ptimeout` command and optionally the virtual environment.
 To build a standalone executable binary of `ptimeout` for your system:
 
 ```bash
-bash build_binary.sh
+bash scripts/build_binary.sh
 ```
 
 This will install PyInstaller (if not already present), and then use it to create a `ptimeout` executable in the `ptimeout/dist` directory. This binary can then be manually distributed or installed.

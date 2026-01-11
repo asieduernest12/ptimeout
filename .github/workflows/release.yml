@@ -1,0 +1,104 @@
+name: Release & Version Bump
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Grant write permissions to GITHUB_TOKEN for creating releases
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Required for commit-and-tag-version to analyze all history
+          token: ${{ secrets.GITHUB_TOKEN }} # Use GITHUB_TOKEN for pushing
+
+      - name: Get last commit message
+        id: get_commit_message
+        run: echo "COMMIT_MESSAGE=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+
+      - name: Skip release check
+        if: contains(env.COMMIT_MESSAGE, 'chore(skip-release)') || contains(env.COMMIT_MESSAGE, 'chore(skip-build)')
+        run: |
+          echo "Skipping version bump and release due to commit message."
+          exit 0 # Exit job early
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # Use a Node.js version compatible with commit-and-tag-version
+
+      - name: Install commit-and-tag-version
+        run: npm install -g commit-and-tag-version
+
+      - name: Determine skip tag
+        id: determine_skip_tag
+        run: |
+          if contains(env.COMMIT_MESSAGE, 'chore(skip-tag)'); then
+            echo "SKIP_TAG=true" >> $GITHUB_ENV
+          else
+            echo "SKIP_TAG=false" >> $GITHUB_ENV
+          fi
+
+      - name: Bump version and create changelog
+        id: bump
+        run: |
+          commit_and_tag_version_cmd="commit-and-tag-version --skip.changelog"
+          if "${{ env.SKIP_TAG }}" == "true"; then
+            commit_and_tag_version_cmd="${commit_and_tag_version_cmd} --skip.tag"
+          fi
+          
+          $commit_and_tag_version_cmd
+          echo "NEW_VERSION=$(cat version.txt)" >> $GITHUB_ENV
+          echo "TAG_NAME=v$(cat version.txt)" >> $GITHUB_ENV
+
+      - name: Configure Git User
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit version.txt
+        run: |
+          git add version.txt
+          git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]" || echo "No changes to commit"
+
+      - name: Push new version commit
+        run: git push origin main
+
+      - name: Push new tag
+        if: "${{ env.SKIP_TAG }}" == "false"
+        run: git push origin ${{ env.TAG_NAME }}
+      
+      # --- Build and Release Executable ---
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+
+      - name: Build Executable
+        run: bash scripts/build_binary.sh # Updated path
+        # The executable will be in ptimeout/dist/ptimeout
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        if: "${{ env.SKIP_TAG }}" == "false" # Only create release if a tag was created
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          name: Release ${{ env.TAG_NAME }}
+          body: |
+            Automated release for version ${{ env.NEW_VERSION }}.
+            See changes in commit history.
+          draft: false
+          prerelease: false
+          files: ptimeout/dist/ptimeout # Attach the built executable

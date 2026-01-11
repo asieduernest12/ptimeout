@@ -1,0 +1,13 @@
+
+services:
+  dev:
+    build: .
+    volumes:
+      - .:/app
+      - ./ptimeout/dist:/app/ptimeout/dist
+  
+  test:
+    build: .
+    command: ["python", "-m", "unittest", "discover", "tests"]
+    volumes:
+      - .:/app
