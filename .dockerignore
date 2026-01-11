@@ -1,0 +1,45 @@
+# Ignore everything in the root except the ptimeout directory, Dockerfile, and docker-compose.yml
+# This strategy ensures only explicitly included files are part of the build context.
+
+# Docker specific files
+Dockerfile
+docker-compose.yml
+
+# Python-specific ignores
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+venv/
+.venv/
+
+# PyInstaller build artifacts (should ideally be built inside docker if needed, but exclude from context)
+build/
+dist/
+*.spec
+
+# Test artifacts (tests will run inside docker, but no need to copy cache)
+.pytest_cache/
+.coverage
+
+# Editor/IDE specific files
+.vscode/
+.idea/
+
+# Git ignores
+.git/
+.gitignore
+
+# Logs and temporary files
+*.log
+sample.log
+.tmp/
+
+# Generated files
+GEMINI.md
+
+# Include only necessary project source code
+!ptimeout/
+ptimeout/*
+!ptimeout/ptimeout.py
+!ptimeout/requirements.txt
