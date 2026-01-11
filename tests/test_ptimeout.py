@@ -9,7 +9,8 @@ class TestPtimeout(unittest.TestCase):
     def run_command_helper(self, command_parts, input_data=None):
         """Helper to run ptimeout as a subprocess and capture its output."""
         # Ensure that the python executable is used for ptimeout.py
-        full_command = [sys.executable, os.path.join('src', 'ptimeout', 'ptimeout.py')] + command_parts
+        # Use the absolute path inside the Docker container
+        full_command = [sys.executable, os.path.join('/app', 'ptimeout', 'ptimeout.py')] + command_parts
         
         process = subprocess.Popen(
             full_command,
@@ -65,7 +66,7 @@ class TestPtimeout(unittest.TestCase):
 
     def test_retries_timeout_after_failure(self):
         stdout, stderr, return_code = self.run_command_helper(
-            ['1s', '-r', '1', '--', 'python', '-c', 'import time; time.sleep(2)'] # Removed exit(1)
+            ['1s', '-r', '1', '--', 'python', '-c', 'import time; time.sleep(2); exit(1)']
         )
         self.assertNotEqual(return_code, 0)
         self.assertIn("Retrying (1/1)...", stderr)
@@ -101,7 +102,7 @@ class TestPtimeout(unittest.TestCase):
     def test_missing_timeout_argument(self):
         stdout, stderr, return_code = self.run_command_helper(['--', 'true'])
         self.assertNotEqual(return_code, 0)
-        self.assertIn("error: the following arguments are required: timeout_arg", stderr)
+        self.assertIn("error: The 'TIMEOUT' argument is required.", stderr)
 
     def test_no_command_after_separator(self):
         stdout, stderr, return_code = self.run_command_helper(['1s', '--'])
@@ -111,8 +112,7 @@ class TestPtimeout(unittest.TestCase):
     def test_no_separator(self):
         stdout, stderr, return_code = self.run_command_helper(['1s', 'true'])
         self.assertNotEqual(return_code, 0)
-        self.assertIn("error: unrecognized arguments: true", stderr)
-
+        self.assertIn("error: No command provided. Use '--' to separate options from the command.", stderr)
 
 if __name__ == '__main__':
     unittest.main()

@@ -4,19 +4,24 @@ FROM python:3.10-slim-bullseye
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements file and install dependencies
-COPY src/ptimeout/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install make for running Makefile targets inside the container
+RUN apt-get update && apt-get install -y make && rm -rf /var/lib/apt/lists/*
 
-# Install binutils for PyInstaller (provides objdump)
-RUN apt-get update && apt-get install -y binutils && rm -rf /var/lib/apt/lists/*
+# Copy requirements.txt and install dependencies
+COPY ptimeout/requirements.txt ./ptimeout/
+RUN pip install --no-cache-dir -r ptimeout/requirements.txt
 
-# Copy the application code into the container
-COPY src .
+# Copy application source code
+COPY ptimeout/ptimeout.py ./ptimeout/
 
-# Copy the tests directory
-COPY tests tests
+# Copy tests
+COPY tests/ ./tests/
 
-# Copy build_binary.sh and set execute permissions
-COPY build_binary.sh .
-RUN chmod +x ./build_binary.sh
+# Copy scripts
+COPY scripts/ ./scripts/
+
+# Copy the Makefile
+COPY Makefile .
+
+# Set the default command to run the application
+CMD ["python", "ptimeout/ptimeout.py"]

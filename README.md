@@ -32,7 +32,7 @@ To build a standalone executable binary of `ptimeout` for your system:
 bash scripts/build_binary.sh
 ```
 
-This will install PyInstaller (if not already present), and then use it to create a `ptimeout` executable in the `ptimeout/dist` directory. This binary can then be manually distributed or installed.
+This script will create a temporary virtual environment, install PyInstaller and project dependencies, build the `ptimeout` executable in the `ptimeout/dist` directory, and then clean up the temporary environment. This binary can then be manually distributed or installed.
 
 ## Usage
 

@@ -10,6 +10,8 @@ __pycache__/
 venv/
 .venv/
 
+.worktrees/
+
 # PyInstaller build artifacts
 build/
 dist/
@@ -32,3 +34,4 @@ sample.log
 
 # Generated files
 GEMINI.md
+

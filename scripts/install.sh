@@ -24,7 +24,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 # The name of the command in the install directory.
 CMD_NAME="ptimeout"
 LINK_PATH="$INSTALL_DIR/$CMD_NAME"
-BINARY_PATH="$SCRIPT_DIR/dist/ptimeout"
+BINARY_PATH="$SCRIPT_DIR/../ptimeout/dist/ptimeout"
 
 # Check if the binary exists before linking
 if [ ! -f "$BINARY_PATH" ]; then

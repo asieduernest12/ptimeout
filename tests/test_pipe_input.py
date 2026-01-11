@@ -8,7 +8,8 @@ class TestPipeInput(unittest.TestCase):
 
     def run_ptimeout_with_pipe(self, input_data, timeout_arg, command_args=None):
         """Helper to run ptimeout with piped input."""
-        cmd = [sys.executable, os.path.join('src', 'ptimeout', 'ptimeout.py'), timeout_arg]
+        # Use the absolute path inside the Docker container
+        cmd = [sys.executable, os.path.join('/app', 'ptimeout', 'ptimeout.py'), timeout_arg]
         if command_args:
             cmd.extend(['--'] + command_args)
 

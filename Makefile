@@ -1,10 +1,10 @@
-.PHONY: all install install-host uninstall uninstall-host build-binary build-binary-docker clean docker-clean-venv run test help docker-setup
+.PHONY: all install install-host uninstall uninstall-host build-binary clean docker-clean-venv run test help docker-setup
 
 # Variables
-PTIMEOUT_MODULE_DIR := src/ptimeout
-VENV_DIR := $(PTIMEOUT_MODULE_DIR)/venv
-DIST_DIR := dist
-BUILD_DIR := build
+PTIMEOUT_MODULE_DIR := ptimeout
+DIST_DIR := $(PTIMEOUT_MODULE_DIR)/dist
+BUILD_DIR := $(PTIMEOUT_MODULE_DIR)/build
+SCRIPTS_DIR := scripts
 
 # Default target
 all: build-binary install
@@ -12,7 +12,7 @@ all: build-binary install
 # Install the ptimeout tool (assumes binary is built)
 install:
 	@echo "Running install script..."
-	./install.sh
+	@bash $(SCRIPTS_DIR)/install.sh
 
 # Install the ptimeout binary on the host (calls install.sh)
 install-host: install
@@ -20,31 +20,27 @@ install-host: install
 # Uninstall the ptimeout tool (also cleans up build artifacts and venv)
 uninstall:
 	@echo "Running uninstall script..."
-	./uninstall.sh
+	@bash $(SCRIPTS_DIR)/uninstall.sh
 
 # Uninstall the ptimeout binary from the host (same as uninstall)
 uninstall-host: uninstall
 
-# Build the standalone binary (now always via Docker for consistency)
-build-binary: build-binary-docker
+# Build the standalone binary (on the host)
+build-binary:
+	@echo "Building standalone ptimeout binary..."
+	@bash $(SCRIPTS_DIR)/build_binary.sh
 
-# Build the standalone binary using PyInstaller (inside Docker)
-build-binary-docker:
-	@echo "Building Docker image for dev service..."
-	docker compose build dev
-	@echo "Building binary inside Docker..."
-	docker compose run --rm dev ./build_binary.sh
-
-# Clean up build artifacts and virtual environment
-clean: docker-clean-venv
+# Clean up build artifacts and temporary virtual environment
+clean:
 	@echo "Cleaning up local build artifacts..."
 	rm -rf $(DIST_DIR) $(BUILD_DIR)
+	rm -rf .build_venv # Remove the temporary venv created by build_binary.sh
 	@echo "Cleanup complete."
 
-# Clean up virtual environment using Docker (to handle permissions)
-docker-clean-venv:
-	@echo "Cleaning up virtual environment inside Docker..."
-	docker compose run --rm dev rm -rf $(PTIMEOUT_MODULE_DIR)/venv
+# Clean up virtual environment inside Docker (this target seems misplaced for host venv cleanup)
+# Removing this target as build_binary.sh manages its own temp venv,
+# and the Docker image does not contain the host's main venv.
+# If the user wants to clean the host's project venv, it should be done manually or via a different target.
 
 # Run the ptimeout script in development mode
 run:
@@ -76,10 +72,10 @@ help:
 	@echo "  make uninstall                  - Uninstalls the ptimeout tool."
 	@echo "  make uninstall-host             - Uninstalls the ptimeout binary and artifacts from the host (same as uninstall)."
 	@echo "  make build-binary               - Builds the standalone ptimeout binary."
-	@echo "  make build-binary-docker        - Builds the standalone ptimeout binary inside Docker (used by build-binary)."
-	@echo "  make clean                      - Removes build artifacts and virtual environment."
-	@echo "  make docker-clean-venv          - Removes the virtual environment using Docker (to handle permissions)."
-	@echo "  make run                        - Runs ptimeout in development mode."
+	# Removed build-binary-docker as build-binary now handles it internally
+	@echo "  make clean                      - Removes local build artifacts and temporary virtual environments."
+	# Removed docker-clean-venv as it was ambiguous and unnecessary with the new build script.
+	@echo "  make run                        - Runs ptimeout in development mode (requires local python setup)."
 	@echo "  make test                       - Runs tests using Docker Compose."
 	@echo "  make docker-setup               - Checks Docker dependencies and builds Docker images."
 	@echo "  make help                       - Display this help message."
