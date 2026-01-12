@@ -74,9 +74,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Dependencies
-        run: pip install -r src/ptimeout/requirements.txt
-
       - name: Build Executable
         run: bash scripts/build_binary.sh
         # The executable will be in src/ptimeout/dist/ptimeout
