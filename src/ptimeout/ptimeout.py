@@ -345,7 +345,8 @@ def get_version():
 def main():
     parser = argparse.ArgumentParser(
         description="Run a command with a time-based progress bar, or process piped input with a timeout.",
-        formatter_class=argparse.RawTextHelpFormatter
+        formatter_class=argparse.RawTextHelpFormatter,
+        usage="%(prog)s TIMEOUT [-h] [-v] [-r RETRIES] [-d {up,down}] -- COMMAND [ARGS...]"
     )
     parser.add_argument(
         '--version',
@@ -356,15 +357,15 @@ def main():
     # We do not explicitly add "-h", "--help" here to avoid conflicts.
     
     parser.add_argument(
+        "timeout_arg",
+        type=str,
+        help="The maximum execution time. Use optional suffixes: s (seconds), m (minutes), h (hours). E.g., '10s', '5m', '1h'."
+    )
+    
+    parser.add_argument(
         "-v", "--verbose",
         action="store_true",
         help="Enable verbose output."
-    )
-    parser.add_argument(
-        "timeout_arg",
-        type=str,
-        nargs='?', # Make it optional for help to work without it
-        help="The maximum execution time. Use optional suffixes: s (seconds), m (minutes), h (hours). E.g., '10s', '5m', '1h'."
     )
     parser.add_argument(
         "-r", "--retries",
@@ -379,9 +380,9 @@ def main():
         default='up',
         help="Specify count direction: 'up' to count elapsed time (default), 'down' to count remaining time."
     )
+    
     parser.add_argument(
-        '--command',
-        required=True,
+        'command',
         nargs=argparse.REMAINDER,
         help='The command and its arguments to run. Precede with "--" to separate from ptimeout options.'
     )
@@ -399,8 +400,15 @@ def main():
 
     # Determine command_args
     command_args = args.command
+    if command_args and command_args[0] == '--':
+        command_args = command_args[1:]
     
-
+    if not command_args:
+        # If there's piped input but no command, default to 'cat'
+        if is_piped_input:
+            command_args = ['cat']
+        else:
+            parser.error("The 'COMMAND' argument is required, preceded by '--'.")
     
     # Validate timeout_arg
     if args.timeout_arg is None:
