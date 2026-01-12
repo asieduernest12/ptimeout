@@ -30,6 +30,13 @@ jobs:
       - name: Install commit-and-tag-version
         run: npm install -g commit-and-tag-version
 
+
+      - name: Configure Git User
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+
       - name: Bump version and create changelog
         id: bump
         run: |
@@ -47,11 +54,6 @@ jobs:
           # Set environment variables for later steps
           echo "NEW_VERSION=$(cat version.txt)" >> $GITHUB_ENV
           echo "TAG_NAME=v$(cat version.txt)" >> $GITHUB_ENV
-
-      - name: Configure Git User
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Commit version.txt
         run: |
