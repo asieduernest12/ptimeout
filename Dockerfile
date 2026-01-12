@@ -5,14 +5,14 @@ FROM python:3.10-slim-bullseye
 WORKDIR /app
 
 # Install make for running Makefile targets inside the container
-RUN apt-get update && apt-get install -y make && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y make binutils && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements.txt and install dependencies
-COPY ptimeout/requirements.txt ./ptimeout/
-RUN pip install --no-cache-dir -r ptimeout/requirements.txt
+COPY src/ptimeout/requirements.txt ./src/ptimeout/
+RUN pip install --no-cache-dir -r src/ptimeout/requirements.txt
 
 # Copy application source code
-COPY ptimeout/ptimeout.py ./ptimeout/
+COPY src/ptimeout/ptimeout.py ./src/ptimeout/
 
 # Copy tests
 COPY tests/ ./tests/
@@ -24,4 +24,4 @@ COPY scripts/ ./scripts/
 COPY Makefile .
 
 # Set the default command to run the application
-CMD ["python", "ptimeout/ptimeout.py"]
+CMD ["python", "src/ptimeout/ptimeout.py"]

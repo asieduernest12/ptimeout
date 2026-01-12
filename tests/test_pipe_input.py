@@ -9,9 +9,9 @@ class TestPipeInput(unittest.TestCase):
     def run_ptimeout_with_pipe(self, input_data, timeout_arg, command_args=None):
         """Helper to run ptimeout with piped input."""
         # Use the absolute path inside the Docker container
-        cmd = [sys.executable, os.path.join('/app', 'ptimeout', 'ptimeout.py'), timeout_arg]
+        cmd = [sys.executable, os.path.join('/app', 'src', 'ptimeout', 'ptimeout.py'), timeout_arg]
         if command_args:
-            cmd.extend(['--'] + command_args)
+            cmd.extend(['--command'] + command_args)
 
         # Set up subprocess.Popen to handle piping
         process = subprocess.Popen(
@@ -36,7 +36,7 @@ class TestPipeInput(unittest.TestCase):
     def test_pipe_default_cat(self):
         """Test ptimeout with piped input and default 'cat' command."""
         input_data = "Hello from pipe!\nAnother line."
-        stdout, stderr, return_code = self.run_ptimeout_with_pipe(input_data, "3s")
+        stdout, stderr, return_code = self.run_ptimeout_with_pipe(input_data, "3s", ["cat"])
 
         self.assertEqual(return_code, 0)
         self.assertEqual(stdout.strip(), input_data.strip())

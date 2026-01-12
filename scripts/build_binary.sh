@@ -7,7 +7,7 @@ echo "Building ptimeout binary..."
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_ROOT="$SCRIPT_DIR/../" # Go up one level from 'scripts'
-PTIMEOUT_MODULE_DIR="$PROJECT_ROOT/ptimeout" 
+PTIMEOUT_MODULE_DIR="$PROJECT_ROOT/src/ptimeout" 
 PTIMEOUT_SCRIPT="$PTIMEOUT_MODULE_DIR/ptimeout.py"
 
 # Define paths for the build artifacts

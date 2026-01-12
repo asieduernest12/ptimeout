@@ -1,7 +1,7 @@
 .PHONY: all install install-host uninstall uninstall-host build-binary clean docker-clean-venv run test help docker-setup
 
 # Variables
-PTIMEOUT_MODULE_DIR := ptimeout
+PTIMEOUT_MODULE_DIR := src/ptimeout
 DIST_DIR := $(PTIMEOUT_MODULE_DIR)/dist
 BUILD_DIR := $(PTIMEOUT_MODULE_DIR)/build
 SCRIPTS_DIR := scripts

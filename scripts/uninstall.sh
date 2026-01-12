@@ -26,8 +26,8 @@ fi
 
 # Get the absolute path to the script's directory.
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-DIST_DIR="$SCRIPT_DIR/../ptimeout/dist"
-BUILD_DIR="$SCRIPT_DIR/../ptimeout/build"
+DIST_DIR="$SCRIPT_DIR/../src/ptimeout/dist"
+BUILD_DIR="$SCRIPT_DIR/../src/ptimeout/build"
 
 # Remove PyInstaller build artifacts
 if [ -d "$DIST_DIR" ]; then

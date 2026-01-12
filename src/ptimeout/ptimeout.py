@@ -90,12 +90,18 @@ def write_stream(input_data, proc_stdin):
         proc_stdin.close() # Important: close stdin to signal EOF to the child process
 
 
-def run_command(command_args, timeout, retries, count_direction='up', piped_stdin_data=None):
+def run_command(command_args, timeout, retries, count_direction='up', piped_stdin_data=None, verbose=False):
     """Runs the command, managing retries and UI updates."""
     
     is_interactive = sys.stdout.isatty()
     console = Console(file=sys.stderr) 
     final_exit_code = 1 # Default to failure
+
+    if verbose:
+        console.print(f"[bold blue]Running command: " + ' '.join(command_args))
+        console.print(f"[bold blue]Timeout: {timeout}s, Retries: {retries}")
+        if piped_stdin_data:
+            console.print(f"[bold blue]Piped input data length: {len(piped_stdin_data)} bytes")
 
     for attempt in range(retries + 1):
         if attempt > 0:
@@ -327,20 +333,32 @@ def parse_timeout(timeout_str):
     
     raise ValueError(f"Invalid time unit: '{unit}'. Use 's', 'm', or 'h'.")
 
+
+def get_version():
+    """Reads the version from the version.txt file."""
+    try:
+        with open(os.path.join(os.path.dirname(__file__), '..', '..', 'version.txt'), 'r') as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        return "0.0.0"
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run a command with a time-based progress bar, or process piped input with a timeout.",
-        usage=f'''
-        {sys.argv[0]} TIMEOUT [-r RETRIES] [-d {{up,down}}] [-- COMMAND [ARGS...] или -- --]
-        cat FILE | {sys.argv[0]} TIMEOUT [-r RETRIES] [-d {{up,down}}] [-- COMMAND [ARGS...]]
-        ''',
-        add_help=False
+        formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(
-        "-h", "--help",
-        action="help",
-        default=argparse.SUPPRESS,
-        help="Show this help message and exit."
+        '--version',
+        action='version',
+        version=f'%(prog)s {get_version()}'
+    )
+    # The default help argument is handled automatically by argparse.
+    # We do not explicitly add "-h", "--help" here to avoid conflicts.
+    
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Enable verbose output."
     )
     parser.add_argument(
         "timeout_arg",
@@ -361,6 +379,12 @@ def main():
         default='up',
         help="Specify count direction: 'up' to count elapsed time (default), 'down' to count remaining time."
     )
+    parser.add_argument(
+        '--command',
+        required=True,
+        nargs=argparse.REMAINDER,
+        help='The command and its arguments to run. Precede with "--" to separate from ptimeout options.'
+    )
 
     # Check if stdin is being piped
     is_piped_input = not sys.stdin.isatty()
@@ -370,56 +394,24 @@ def main():
         # Read all of stdin here, as we might need to feed it to a subprocess later
         piped_stdin_data = sys.stdin.buffer.read() # Read as bytes
 
-    # Separate ptimeout arguments from the command arguments
-    try:
-        separator_index = sys.argv.index('--')
-        # ptimeout's arguments are everything before the '--' separator.
-        ptimeout_args_str = sys.argv[1:separator_index]
-        command_args = sys.argv[separator_index + 1:]
-    except ValueError:
-        # No '--' separator found
-        ptimeout_args_str = sys.argv[1:]
-        command_args = []
-    
-    # If no command is provided but stdin is piped, use a default command
-    if is_piped_input and not command_args:
-        command_args = ['cat'] # Default to 'cat' if piped input and no command specified
-    elif not is_piped_input and not command_args:
-        # If no piped input and no command, then a command is required
-        parser.error("No command provided. Use '--' to separate options from the command.")
+    # Parse all arguments first
+    args = parser.parse_args()
 
-    # Handle help message before full argument parsing if -h or --help is present
-    if '-h' in sys.argv or '--help' in sys.argv:
-        parser.print_help()
-        sys.exit(0)
+    # Determine command_args
+    command_args = args.command
+    
 
-    # If no arguments at all, print help
-    if len(sys.argv) == 1 and not is_piped_input:
-        parser.print_help()
-        sys.exit(0)
     
-    # Check if a timeout argument was provided in the ptimeout_args_str
-    # This is a bit tricky because 'timeout_arg' is positional and nargs='?'
-    # A simple way to check if it was provided is to see if any positional arg exists
-    timeout_provided_in_args = False
-    for arg_str in ptimeout_args_str:
-        if not arg_str.startswith('-'): # Positional arg, likely timeout_arg
-            timeout_provided_in_args = True
-            break
-    
-    if not timeout_provided_in_args:
+    # Validate timeout_arg
+    if args.timeout_arg is None:
         parser.error("The 'TIMEOUT' argument is required.")
-
-    # Parse only the ptimeout arguments
-    args = parser.parse_args(ptimeout_args_str)
 
     try:
         timeout_seconds = parse_timeout(args.timeout_arg)
     except ValueError as e:
         parser.error(str(e))
 
-    exit_code = run_command(command_args, timeout_seconds, args.retries, args.count_direction, piped_stdin_data)
-    # print(f"DEBUG: sys.exit with exit_code: {exit_code}", file=sys.stderr) # DEBUG
+    exit_code = run_command(command_args, timeout_seconds, args.retries, args.count_direction, piped_stdin_data, args.verbose)
     sys.exit(exit_code)
 
 if __name__ == "__main__":
