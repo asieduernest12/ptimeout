@@ -41,22 +41,22 @@ This script will create a temporary Python virtual environment, install PyInstal
 Use the `--` separator to distinguish `ptimeout` options from the command to be executed.
 
 ```bash
-ptimeout TIMEOUT [-h] [-v] [--version] [-r RETRIES] [-d {up,down}] --command COMMAND [ARGS...]
+ptimeout TIMEOUT [-h] [-v] [--version] [-r RETRIES] [-d {up,down}] -- COMMAND [ARGS...]
 ```
 
 **Examples:**
 
 *   Run `long_running_script.sh` with a 10-second timeout:
     ```bash
-    ptimeout 10s --command bash long_running_script.sh
+    ptimeout 10s -- bash long_running_script.sh
     ```
 *   Run `my_command` with a 1-minute timeout and 2 retries, counting down:
     ```bash
-    ptimeout 1m -r 2 -d down --command my_command arg1 arg2
+    ptimeout 1m -r 2 -d down -- my_command arg1 arg2
     ```
 *   Run `my_command` with verbose output:
     ```bash
-    ptimeout -v 5s --command my_command
+    ptimeout -v 5s -- my_command
     ```
 
 ### Processing Piped Input with a Timeout
@@ -64,19 +64,23 @@ ptimeout TIMEOUT [-h] [-v] [--version] [-r RETRIES] [-d {up,down}] --command COM
 `ptimeout` can also accept input from a pipe. When input is piped, `ptimeout` will feed this input to the `stdin` of the command it executes. If no command is specified after `--`, it defaults to `cat`.
 
 ```bash
-cat FILE | ptimeout TIMEOUT [-h] [-v] [--version] [-r RETRIES] [-d {up,down}] [--command COMMAND [ARGS...]]
+cat FILE | ptimeout TIMEOUT [-h] [-v] [--version] [-r RETRIES] [-d {up,down}] [-- COMMAND [ARGS...]]
 ```
 
 **Examples:**
 
 *   Pipe content of `input.txt` to `grep "pattern"` with a 5-second timeout:
     ```bash
-    cat input.txt | ptimeout 5s --command grep "pattern"
+    cat input.txt | ptimeout 5s -- grep "pattern"
     ```
 *   Pipe content and echo it with a 3-second timeout (using default `cat` command):
     ```bash
-    echo "hello world" | ptimeout 3s --command cat
+    echo "hello world" | ptimeout 3s
     ```
+
+## Demo
+
+![ptimeout demo video](ptimeout-demo.webm)
 
 ## License
 
