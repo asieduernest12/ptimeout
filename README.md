@@ -9,7 +9,7 @@ A simple command-line tool for running a command with a timeout. It can also pro
 To install `ptimeout` on your system, run the `install.sh` script:
 
 ```bash
-bash install.sh
+bash scripts/install.sh
 ```
 
 This will install the necessary dependencies into a virtual environment and create a `ptimeout` command in `/usr/local/bin` or `~/.local/bin`.
@@ -19,7 +19,7 @@ This will install the necessary dependencies into a virtual environment and crea
 To uninstall `ptimeout`, run the `uninstall.sh` script:
 
 ```bash
-bash uninstall.sh
+bash scripts/uninstall.sh
 ```
 
 This will remove the `ptimeout` command and optionally the virtual environment.
@@ -29,10 +29,10 @@ This will remove the `ptimeout` command and optionally the virtual environment.
 To build a standalone executable binary of `ptimeout` for your system:
 
 ```bash
-bash build_binary.sh
+bash scripts/build_binary.sh
 ```
 
-This will install PyInstaller (if not already present), and then use it to create a `ptimeout` executable in the `ptimeout/dist` directory. This binary can then be manually distributed or installed.
+This script will create a temporary Python virtual environment, install PyInstaller and the project's dependencies (`src/ptimeout/requirements.txt`) into it, then use PyInstaller to build the `ptimeout` executable. The resulting binary will be placed in the `src/ptimeout/dist` directory, and intermediate build files in `src/ptimeout/build`. Finally, the temporary virtual environment will be cleaned up. This self-contained process ensures a clean build environment.
 
 ## Usage
 
@@ -41,18 +41,22 @@ This will install PyInstaller (if not already present), and then use it to creat
 Use the `--` separator to distinguish `ptimeout` options from the command to be executed.
 
 ```bash
-ptimeout TIMEOUT [-r RETRIES] [-d {up,down}] -- COMMAND [ARGS...]
+ptimeout TIMEOUT [-h] [-v] [--version] [-r RETRIES] [-d {up,down}] --command COMMAND [ARGS...]
 ```
 
 **Examples:**
 
 *   Run `long_running_script.sh` with a 10-second timeout:
     ```bash
-    ptimeout 10s -- bash long_running_script.sh
+    ptimeout 10s --command bash long_running_script.sh
     ```
 *   Run `my_command` with a 1-minute timeout and 2 retries, counting down:
     ```bash
-    ptimeout 1m -r 2 -d down -- my_command arg1 arg2
+    ptimeout 1m -r 2 -d down --command my_command arg1 arg2
+    ```
+*   Run `my_command` with verbose output:
+    ```bash
+    ptimeout -v 5s --command my_command
     ```
 
 ### Processing Piped Input with a Timeout
@@ -60,18 +64,18 @@ ptimeout TIMEOUT [-r RETRIES] [-d {up,down}] -- COMMAND [ARGS...]
 `ptimeout` can also accept input from a pipe. When input is piped, `ptimeout` will feed this input to the `stdin` of the command it executes. If no command is specified after `--`, it defaults to `cat`.
 
 ```bash
-cat FILE | ptimeout TIMEOUT [-r RETRIES] [-d {up,down}] [-- COMMAND [ARGS...]]
+cat FILE | ptimeout TIMEOUT [-h] [-v] [--version] [-r RETRIES] [-d {up,down}] [--command COMMAND [ARGS...]]
 ```
 
 **Examples:**
 
 *   Pipe content of `input.txt` to `grep "pattern"` with a 5-second timeout:
     ```bash
-    cat input.txt | ptimeout 5s -- grep "pattern"
+    cat input.txt | ptimeout 5s --command grep "pattern"
     ```
 *   Pipe content and echo it with a 3-second timeout (using default `cat` command):
     ```bash
-    echo "hello world" | ptimeout 3s
+    echo "hello world" | ptimeout 3s --command cat
     ```
 
 ## License

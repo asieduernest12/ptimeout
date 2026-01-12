@@ -1,0 +1,36 @@
+# Ignore all non-essential development and build artifacts for smaller Docker build contexts and images.
+
+# General ignores
+**/.git
+**/.github
+**/.vscode
+**/.idea
+**/.tmp
+**/__pycache__
+**/*.pyc
+**/*.pyd
+**/*.pyo
+**/*.spec
+**/venv
+**/.venv
+**/.pytest_cache
+**/.coverage
+**/*.log
+**/sample.log
+**/GEMINI.md
+
+# Build artifacts
+**/build
+**/dist
+
+# Host-specific scripts and documentation not needed in the image
+install.sh
+uninstall.sh
+build_binary.sh
+
+COMMONS_CLAUSE.md
+LICENSE
+README.md
+version.txt
+
+# Tests are generally not needed in the final image.

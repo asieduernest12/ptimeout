@@ -1,0 +1,39 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+.eggs/
+
+# Virtual environment
+venv/
+.venv/
+
+.worktrees/
+
+# PyInstaller build artifacts
+build/
+dist/
+*.spec
+
+# Test and coverage artifacts
+.pytest_cache/
+.coverage
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# Logs
+*.log
+sample.log
+
+# Temporary files
+.tmp/
+
+# Generated files
+GEMINI.md
+
+.gemini/
+
