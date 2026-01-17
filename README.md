@@ -28,35 +28,79 @@ A robust command-line utility designed to execute other commands with a predefin
 
 ## Installation
 
-### Using install.sh
+### On Your Host System
 
-To install `ptimeout` on your system, execute the provided `install.sh` script:
+To install `ptimeout` on your local system, ensuring it's available globally:
 
-```bash
-bash scripts/install.sh
-```
+1.  **Build the standalone binary:** The `ptimeout` binary needs to be built first. The `make build-binary` command now handles this by building the binary inside a Docker container for compatibility and placing it in `src/ptimeout/dist`.
+    ```bash
+    make build-binary
+    ```
+2.  **Run the install script:** This script will create a symbolic link to the built binary in a directory within your system's `PATH` (e.g., `/usr/local/bin` or `~/.local/bin`).
+    ```bash
+    make install
+    ```
+    You can also run the script directly:
+    ```bash
+    bash scripts/install.sh
+    ```
+    If `ptimeout` is not found after installation, you may need to restart your terminal or add the installation directory to your `PATH` environment variable.
 
-This script will install necessary dependencies within a virtual environment and create a `ptimeout` command in either `/usr/local/bin` or `~/.local/bin`, making it globally accessible.
+### Into a Running Docker Container (Ad-hoc)
+
+You can also install `ptimeout` into an *already running* Docker container for ad-hoc usage. This is useful for quickly adding `ptimeout` to a container without rebuilding its image.
+
+1.  **Ensure `ptimeout` binary is built on your host:**
+    ```bash
+    make build-binary
+    ```
+    This ensures the `src/ptimeout/dist/ptimeout` binary exists on your host.
+
+2.  **Run the `install-into-running-container` make target:**
+    This command will automatically find a running `dev` container (if one exists and was started with `docker compose run --rm -d dev bash`) and install `ptimeout` into it.
+    ```bash
+    make install-into-running-container
+    ```
+    If you want to install into a specific container, provide its name or ID:
+    ```bash
+    make install-into-running-container CONTAINER_NAME=<your_container_name_or_id>
+    ```
+
+3.  **Verify installation inside the container:**
+    Get the container ID (if not explicitly provided):
+    ```bash
+    docker ps -q --filter name=ptimeout-dev-run-
+    ```
+    Then, execute `ptimeout --help` inside the container:
+    ```bash
+    docker exec <container_id> ptimeout --help
+    ```
 
 ### Uninstallation
 
-To remove `ptimeout` from your system, run the `uninstall.sh` script:
+To remove `ptimeout` from your local system, run the `uninstall.sh` script:
 
 ```bash
 bash scripts/uninstall.sh
 ```
 
-This will safely remove the `ptimeout` command and, optionally, the associated virtual environment and build artifacts.
+This will safely remove the `ptimeout` command's symbolic link and, optionally, associated build artifacts.
 
 ## Building the Binary
 
 To create a standalone executable binary of `ptimeout` tailored for your operating system:
 
 ```bash
-bash scripts/build_binary.sh
+make build-binary
 ```
 
-This process involves creating a temporary Python virtual environment, installing PyInstaller and the project's dependencies (`src/ptimeout/requirements.txt`), and then utilizing PyInstaller to package the `ptimeout` executable. The final binary will be located in `src/ptimeout/dist`, with intermediate build files in `src/ptimeout/build`. The temporary virtual environment is automatically cleaned up, ensuring a pristine build environment.
+This command performs the build process inside a temporary Docker container based on the project's `dev` image. This ensures `glibc` compatibility and a consistent build environment, regardless of your host system. The process involves:
+
+1.  Creating a temporary Python virtual environment *inside the Docker container*.
+2.  Installing PyInstaller and the project's dependencies (`src/ptimeout/requirements.txt`) into that virtual environment.
+3.  Utilizing PyInstaller to package the `ptimeout` executable.
+
+The final binary will be extracted from the temporary container and placed in your host's `src/ptimeout/dist` directory. Intermediate build files are handled within the temporary container and cleaned up automatically.
 
 ## Usage
 
@@ -129,28 +173,43 @@ This project leverages Docker Compose to establish a consistent and isolated dev
 
 ### Getting Started
 
-1.  **Build the Docker images:**
-    Ensure your Docker images are up-to-date by building the `dev` and `test` service images based on the `Dockerfile`:
-
+1.  **Set up the Docker environment:**
+    Ensure your Docker environment is ready and images are built:
     ```bash
-    docker compose build
+    make docker-setup
     ```
 
-2.  **Run the development container:**
-    For active development, run the `dev` service. This mounts your local project directory into the container, allowing for live code changes. You will get a shell inside the container where you can run Python scripts, make changes, etc.
+2.  **Build the `ptimeout` binary:**
+    Build the standalone `ptimeout` binary on your host system. This process is Dockerized for compatibility.
+    ```bash
+    make build-binary
+    ```
 
+3.  **Install `ptimeout` locally (optional for host development):**
+    If you wish to use the `ptimeout` command directly on your host machine, install the built binary:
+    ```bash
+    make install
+    ```
+
+4.  **Run the development container:**
+    For active development or to run the `ptimeout.py` script directly within a Python environment:
     ```bash
     docker compose run --rm dev bash
     ```
+    Once inside the container, you can run the Python script:
+    ```bash
+    python src/ptimeout/ptimeout.py 5s -- echo "Hello from container!"
+    ```
 
-    The `--rm` flag ensures the container is automatically removed after you exit, keeping your system clean.
+    You can also use the `ptimeout` binary you built and installed into the container (if you used `make install-into-running-container`):
+    ```bash
+    ptimeout 5s -- echo "Hello from installed binary!"
+    ```
 
 ### Running Tests
 
 To execute the full test suite within the Docker environment:
 
 ```bash
-docker compose run --rm test
+make test
 ```
-
-This command runs the `test` service, which is pre-configured to execute the project's tests. The `--rm` flag ensures the test container is cleaned up after execution.
