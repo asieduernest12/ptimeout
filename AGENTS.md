@@ -1,5 +1,9 @@
 # Project: ptimeout
 
+## Agent Workflow and Ticket Management
+
+All rules for creating, working, and managing tickets are defined in `.tickets/AGENTS.md` and must be strictly followed. Agents are expected to be helpful, independent, efficient, and smart at all times.
+
 ## Project Overview
 
 `ptimeout` is a command-line tool written in Python. Its primary function is to execute other commands with a predefined timeout. It can also now process piped input (`stdin`) with a timeout, allowing for flexible chaining with other command-line utilities. This project facilitates easy installation, uninstallation, and the creation of standalone executable binaries. For development and testing, it utilizes Docker Compose to provide a consistent and isolated environment.
