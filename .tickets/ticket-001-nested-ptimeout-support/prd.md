@@ -28,11 +28,11 @@ Implement functionality to clearly support and visually represent nested `ptimeo
 ## 6. Subtask Checklist
 
 #### Main Task Structure
-- [ ] Task 1: Enhance argument parsing to detect nested `ptimeout` commands.
+- [-] Task 1: Enhance argument parsing to detect nested `ptimeout` commands.
   - **Problem**: Current `argparse` setup might not differentiate `ptimeout` as a subcommand properly.
   - **Test**: Create a unit test that parses `['30s', '--', 'ptimeout', '40s', '--', 'ls']` and correctly identifies the nested `ptimeout` command and its arguments.
   - **Subtasks**:
-    - [ ] Subtask 1.1: Modify `argparse` configuration to recognize `ptimeout` as a potential subcommand after `--`.
+    - [x] Subtask 1.1: Modify `argparse` configuration to recognize `ptimeout` as a potential subcommand after `--`.
       - **Objective**: Update `ptimeout.py` to allow `ptimeout` to parse arguments for itself and then pass remaining arguments to a potential subcommand.
       - **Test**: Write a test case where a mock `sys.argv` containing a nested `ptimeout` call is passed, and the parser successfully extracts both the outer and inner `ptimeout` arguments.
     - [ ] Subtask 1.2: Implement logic to extract the inner `ptimeout` command and its arguments.
