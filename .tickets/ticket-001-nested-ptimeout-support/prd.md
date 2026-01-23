@@ -35,9 +35,9 @@ Implement functionality to clearly support and visually represent nested `ptimeo
     - [x] Subtask 1.1: Modify `argparse` configuration to recognize `ptimeout` as a potential subcommand after `--`.
       - **Objective**: Update `ptimeout.py` to allow `ptimeout` to parse arguments for itself and then pass remaining arguments to a potential subcommand.
       - **Test**: Write a test case where a mock `sys.argv` containing a nested `ptimeout` call is passed, and the parser successfully extracts both the outer and inner `ptimeout` arguments.
-    - [ ] Subtask 1.2: Implement logic to extract the inner `ptimeout` command and its arguments.
+    - [x] Subtask 1.2: Implement logic to extract the inner `ptimeout` command and its arguments.
       - **Objective**: Develop a function that, given the parsed arguments, can identify if a nested `ptimeout` is present and return its arguments for recursive processing.
-      - **Test**: Create a test function that takes a list of arguments (e.g., `['ptimeout', '40s', '--', 'ls']`) and returns `('ptimeout', ['40s', '--', 'ls'])`.
+      - **Test**: Create a test function that takes a list of arguments (e.g., `['ptimeout', '40s', '--', 'ls']`) and returns `('ptimeout', ['40s', '--', 'ls'])`).
 
 - [ ] Task 2: Implement recursive execution logic for nested `ptimeout` commands.
   - **Problem**: The `run_command_with_timeout` function currently assumes a single command. It needs to handle the case where the command itself is another `ptimeout` instance.
