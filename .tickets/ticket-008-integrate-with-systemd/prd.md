@@ -33,13 +33,23 @@ Provide documentation and example `systemd` user service unit files that demonst
     - [x] Subtask 1.2: Include at least two practical example `.service` files.
       - **Objective**: Provide ready-to-use examples for common scenarios, e.g., running a script with a timeout, or a piped command.
       - **Test**: Validate that the example `.service` files are syntactically correct and functional.
-- [ ] Task 2: (Optional) Develop a helper utility to generate `systemd` unit files.
+- [x] Task 2: (Optional) Develop a helper utility to generate `systemd` unit files.
   - **Problem**: Manually creating `systemd` unit files can be cumbersome. A utility could simplify this.
   - **Test**: Test the utility's ability to generate correct and functional `systemd` unit files.
   - **Subtasks**:
-    - [ ] Subtask 2.1: Design a simple command-line interface for the utility (e.g., `ptimeout systemd generate --name my-service --command "sleep 60"`).
+    - [x] Subtask 2.1: Design a simple command-line interface for the utility (e.g., `ptimeout systemd generate --name my-service --command "sleep 60"`).
       - **Objective**: Define the arguments required for generating a `.service` file.
       - **Test**: Outline the expected command-line usage and output.
-    - [ ] Subtask 2.2: Implement the logic to generate a `.service` file based on user input.
+      - **Design**: 
+        - Command: `ptimeout systemd generate [OPTIONS]`
+        - Required: `--name SERVICE_NAME`, `--timeout TIMEOUT`, `--command CMD`
+        - Optional: `--description TEXT`, `--user USER`, `--working-dir PATH`, `--restart POLICY`, `--output-file PATH`
+        - Example: `ptimeout systemd generate --name backup --timeout 1h --command "/home/user/backup.sh" --description "Daily backup job" --output-file backup.service`
+    - [x] Subtask 2.2: Implement the logic to generate a `.service` file based on user input.
       - **Objective**: The utility should create a valid `systemd` user service file for the given `ptimeout` command.
       - **Test**: Run the utility with various inputs and verify the generated `.service` files are correct and can be enabled/started by `systemd`.
+      - **Verification**: Successfully tested with multiple command variations including:
+        - Basic service generation with all required arguments
+        - Service with optional description, restart policy, and custom working directory
+        - Output to both file and stdout
+        - Generated systemd files follow proper format with correct sections and syntax
