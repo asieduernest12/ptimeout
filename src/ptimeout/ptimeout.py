@@ -157,6 +157,7 @@ def run_command(
     count_direction="up",
     piped_stdin_data=None,
     verbose=False,
+    nesting_level=0,
 ):
     """Runs the command, managing retries and UI updates."""
 
@@ -164,12 +165,47 @@ def run_command(
     console = Console(file=sys.stderr)
     final_exit_code = 1  # Default to failure
 
+    # Check for nested ptimeout command
+    is_nested, nested_args, remaining_args = extract_nested_ptimeout(command_args)
+
+    if is_nested:
+        # Handle nested ptimeout recursively
+        if verbose:
+            indent = "  " * nesting_level
+            console.print(
+                f"{indent}[bold cyan]Nested ptimeout detected (level {nesting_level})"
+            )
+            console.print(
+                f"{indent}[bold cyan]Inner command: {' '.join(remaining_args) if remaining_args else '(no command)'}"
+            )
+
+        # Recursively call run_command for the nested ptimeout
+        # Extract timeout and options from nested args
+        nested_timeout_str = nested_args[1] if len(nested_args) > 1 else "30s"
+        try:
+            nested_timeout = parse_timeout(nested_timeout_str)
+        except ValueError:
+            console.print(f"[bold red]Invalid nested timeout: {nested_timeout_str}")
+            return 1
+
+        # Pass through the same retry and direction options for simplicity
+        return run_command(
+            remaining_args or [],  # Ensure it's a list even if empty
+            nested_timeout,
+            retries,
+            count_direction,
+            piped_stdin_data,
+            verbose,
+            nesting_level + 1,
+        )
+
     if verbose:
-        console.print(f"[bold blue]Running command: " + " ".join(command_args))
-        console.print(f"[bold blue]Timeout: {timeout}s, Retries: {retries}")
+        indent = "  " * nesting_level
+        console.print(f"{indent}[bold blue]Running command: " + " ".join(command_args))
+        console.print(f"{indent}[bold blue]Timeout: {timeout}s, Retries: {retries}")
         if piped_stdin_data:
             console.print(
-                f"[bold blue]Piped input data length: {len(piped_stdin_data)} bytes"
+                f"{indent}[bold blue]Piped input data length: {len(piped_stdin_data)} bytes"
             )
 
     for attempt in range(retries + 1):

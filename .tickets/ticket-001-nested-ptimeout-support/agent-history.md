@@ -21,14 +21,28 @@
 - ✅ All 5 test cases passed including invalid inputs
 - ✅ Function handles edge cases: empty args, missing separator, non-ptimeout commands
 
-### Next Steps
-- Task 1 complete, move to Task 2: Implement recursive execution logic
-- Need to modify `run_command()` to use `extract_nested_ptimeout()`
-- Focus on Subtask 2.1: Recursive execution for nested ptimeout
+## Session Start: 2025-01-23 [Second Session]
+
+### 10:30 - Task 2 Initiation
+- ✅ Read agent history from previous session
+- ✅ Updated Task 2 status to in progress `[-]`
+- ✅ Ready to begin Subtask 2.1: Modify `run_command_with_timeout` to detect and recursively call itself for nested `ptimeout` commands
+
+### 10:35 - Starting Subtask 2.1
+- 🔍 Analyzing current `run_command_with_timeout()` function in `ptimeout.py`
+- 📋 Need to integrate `extract_nested_ptimeout()` function from line 93
+- 🎯 Objective: Make function recursive when nested ptimeout detected
+
+### 10:40 - Subtask 2.1 Complete
+- ✅ Fixed code duplication in `run_command()` function (removed duplicate lines 202-218)
+- ✅ Verified recursive logic correctly detects nested ptimeout commands using `extract_nested_ptimeout()`
+- ✅ Created comprehensive test file `.tmp/test_subtask_2_1.py` with 4 test cases
+- ✅ All tests passed: nested detection, verbose output, non-nested commands
+- ✅ Function correctly handles nesting levels and recursive calls
 
 ### Notes for Future Sessions
 - Working directory: `/home/linuxdev/Desktop/workshop/studio/ptimeout`
 - Follow strict task ordering: 1.1 → 1.2 → 2.1 → 2.2 → 3.1 → 3.2
-- `extract_nested_ptimeout()` function ready at line 93
+- Subtask 2.2 next: Ensure proper process handling and termination for nested processes
 - Test files in `.tmp/` directory (ignored by git)
 - Remember to commit immediately after each task passes tests

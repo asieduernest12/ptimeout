@@ -28,7 +28,7 @@ Implement functionality to clearly support and visually represent nested `ptimeo
 ## 6. Subtask Checklist
 
 #### Main Task Structure
-- [-] Task 1: Enhance argument parsing to detect nested `ptimeout` commands.
+- [x] Task 1: Enhance argument parsing to detect nested `ptimeout` commands.
   - **Problem**: Current `argparse` setup might not differentiate `ptimeout` as a subcommand properly.
   - **Test**: Create a unit test that parses `['30s', '--', 'ptimeout', '40s', '--', 'ls']` and correctly identifies the nested `ptimeout` command and its arguments.
   - **Subtasks**:
@@ -39,11 +39,11 @@ Implement functionality to clearly support and visually represent nested `ptimeo
       - **Objective**: Develop a function that, given the parsed arguments, can identify if a nested `ptimeout` is present and return its arguments for recursive processing.
       - **Test**: Create a test function that takes a list of arguments (e.g., `['ptimeout', '40s', '--', 'ls']`) and returns `('ptimeout', ['40s', '--', 'ls'])`).
 
-- [ ] Task 2: Implement recursive execution logic for nested `ptimeout` commands.
+- [-] Task 2: Implement recursive execution logic for nested `ptimeout` commands.
   - **Problem**: The `run_command_with_timeout` function currently assumes a single command. It needs to handle the case where the command itself is another `ptimeout` instance.
   - **Test**: Run integration tests with nested `ptimeout` commands, verifying that timeouts are applied correctly at each level.
   - **Subtasks**:
-    - [ ] Subtask 2.1: Modify `run_command_with_timeout` to detect and recursively call itself for nested `ptimeout` commands.
+    - [-] Subtask 2.1: Modify `run_command_with_timeout` to detect and recursively call itself for nested `ptimeout` commands.
       - **Objective**: Adjust the `run_command_with_timeout` function to check if the command to be executed is `ptimeout` and, if so, invoke itself with the inner `ptimeout`'s arguments.
       - **Test**: Use mock objects to simulate nested process execution and verify that the recursive calls are made with the correct arguments and that the outer `ptimeout` correctly monitors the inner `ptimeout`'s process.
     - [ ] Subtask 2.2: Ensure proper process handling and termination for nested processes.
