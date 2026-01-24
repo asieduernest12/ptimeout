@@ -86,6 +86,8 @@ cat FILE | ptimeout TIMEOUT [-h] [-v] [-r RETRIES] [-d {up,down}] [-- COMMAND [A
 
 ### Development Environment with Docker Compose
 
+All development, validation, and testing activities must be performed within the `dev` container.
+
 The project uses Docker Compose to set up a consistent development and testing environment.
 
 #### Prerequisites
@@ -97,29 +99,32 @@ The project uses Docker Compose to set up a consistent development and testing e
 
 `Makefile` targets are designed to be run from your **host machine** to orchestrate Docker Compose services. For example, `make test` will execute the test suite within a Docker container. While `make` is installed within the Docker images, running `make` targets directly *inside* a container for Docker Compose orchestration is generally not the intended workflow, as the container itself would lack the Docker daemon to manage other services.
 
-#### Developing with Docker
+#### Development Container Usage
 
-1.  **Build the Docker images:**
+1.  **Access the development container:**
+    To start developing, run the `dev` service with `docker compose run --rm dev bash`. This command mounts your local project directory into the container, allowing for live code changes without needing to rebuild the image constantly.
     First, ensure your Docker images are up-to-date. This command builds the `dev` and `test` service images based on the `Dockerfile`.
     ```bash
     docker compose build
     ```
 
-2.  **Run the development container:**
+2.  **Execute commands within the container:**
+    Use the `docker compose run --rm dev bash` command to access the container shell. From there, you can run Python scripts, make changes, and perform other development tasks.
     To actively develop, you can run the `dev` service, which mounts your local project directory into the container. This allows for live code changes without needing to rebuild the image constantly.
     ```bash
     docker compose run --rm dev bash
     ```
     The `--rm` flag ensures the container is removed after you exit, keeping your system clean. You will get a shell inside the container where you can run Python scripts, make changes, etc.
 
-3.  **Executing the application within Docker:**
+3.  **Building the standalone binary:**
+    While `scripts/build_binary.sh` handles building the standalone executable on the host, you can also perform build steps within the Docker `dev` container if needed, ensuring a consistent build environment:
     To run the `ptimeout` application (e.g., `src/ptimeout/ptimeout.py`) directly from your development container:
     ```bash
     docker compose run --rm dev python ptimeout/ptimeout.py <your_arguments>
     ```
     Replace `<your_arguments>` with any command-line arguments `ptimeout` expects.
 
-#### Building within Docker
+
 
 While `scripts/build_binary.sh` handles building the standalone executable on the host, you can also perform build steps within the Docker `dev` container if needed, ensuring a consistent build environment:
 
@@ -129,6 +134,11 @@ docker compose run --rm dev bash -c "python -m PyInstaller --onefile src/ptimeou
 *Note: This example demonstrates running PyInstaller within the container. Adjust the command as per your specific build requirements.*
 
 #### Testing with Docker
+    To execute the test suite within the Docker environment:
+    ```bash
+docker compose run --rm test
+```
+    This command runs the `test` service, which is configured to execute the project's tests. The `--rm` flag ensures the test container is cleaned up after execution.
 
 To execute the test suite within the Docker environment:
 

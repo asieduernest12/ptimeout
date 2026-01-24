@@ -15,6 +15,6 @@ Be judicious with your time and effort.
 
 further instructions defined in @.tickets/AGENTS.md should be followed and observed
 
-* follow instructions in AGENTS.md , .tickets/AGENTS.md
+* follow instructions in AGENTS.md , .tickets/AGENTS.md strictly
 
 ## use .tmp/ for any temp files or directories needs
