@@ -4,6 +4,7 @@ import argparse
 import configparser
 import os
 import queue
+import signal
 import subprocess
 import sys
 import threading
@@ -109,6 +110,51 @@ MAX_DISPLAY_LINES = 20
 
 # Default configuration file path following XDG Base Directory Specification
 DEFAULT_CONFIG_FILE = os.path.expanduser("~/.config/ptimeout/config.ini")
+
+# Global variable to store current subprocess for signal handling
+current_subprocess = None
+
+
+def signal_handler(signum, frame):
+    """
+    Handle SIGTERM and SIGINT signals gracefully.
+
+    This function will terminate the current subprocess and exit with appropriate exit code.
+    """
+    global current_subprocess
+
+    # Print message about received signal
+    signal_name = "SIGTERM" if signum == signal.SIGTERM else "SIGINT"
+    console = Console(file=sys.stderr)
+    console.print(f"\n[yellow]Received {signal_name}, terminating child process...]")
+
+    # Terminate the current subprocess if it exists and is running
+    if current_subprocess and current_subprocess.poll() is None:
+        try:
+            # Kill the entire process group to ensure all children are terminated
+            os.killpg(os.getpgid(current_subprocess.pid), signal.SIGTERM)
+            # Give it a moment to terminate gracefully
+            import time
+
+            time.sleep(0.1)
+            # If still running, force kill
+            if current_subprocess.poll() is None:
+                os.killpg(os.getpgid(current_subprocess.pid), signal.SIGKILL)
+        except (ProcessLookupError, OSError):
+            # Process might have already terminated
+            pass
+
+    # Exit with appropriate signal code (128 + signal number)
+    signal_exit_code = 128 + signum
+    sys.exit(signal_exit_code)
+
+
+def register_signal_handlers():
+    """
+    Register signal handlers for SIGTERM and SIGINT.
+    """
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
 
 
 def load_config(config_path=None):
@@ -231,6 +277,7 @@ def run_command(
 ):
     """Runs the command, managing retries and UI updates."""
 
+    global current_subprocess
     is_interactive = sys.stdout.isatty()
     console = Console(file=sys.stderr)
     final_exit_code = EXIT_PTIMEOUT_ERROR  # Default to ptimeout error
@@ -374,6 +421,9 @@ def run_command(
                         stderr=subprocess.PIPE,
                         preexec_fn=os.setsid,  # To kill the whole process group
                     )
+
+                    # Update global subprocess reference for signal handling
+                    current_subprocess = proc
                 except FileNotFoundError:
                     # Command cannot be found
                     if verbose:
@@ -606,6 +656,9 @@ def run_command(
                 console.print(f"\n[bold red]An error occurred: {e}")
                 final_exit_code = 1
             break  # Exit retry loop on exception
+        finally:
+            # Clear global subprocess reference
+            current_subprocess = None
 
     # print(f"DEBUG: Final final_exit_code before return from run_command: {final_exit_code}", file=sys.stderr) # DEBUG
     return final_exit_code
@@ -769,6 +822,9 @@ def get_version():
 
 
 def main():
+    # Register signal handlers for graceful termination
+    register_signal_handlers()
+
     # First parse just the --config argument to determine config file location
     config_parser = argparse.ArgumentParser(add_help=False)
     config_parser.add_argument("--config", type=str)
