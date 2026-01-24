@@ -54,9 +54,30 @@
 - ✅ All tests passed: basic timeout, early finish, cleanup, signal handling
 - ✅ Process group isolation and signal propagation working correctly
 
+### 10:55 - Task 2 Complete
+- ✅ Both Subtask 2.1 (recursive execution) and 2.2 (process handling) complete
+- ✅ Nested ptimeout commands now work with proper timeout and signal management
+- ✅ All core functionality tested and verified
+
+### 10:56 - Starting Task 3: Verbose Output
+- 🎯 Objective: Implement clear verbose output for nested ptimeout execution
+- 📋 Task 3.1: Add logging for start/end of each ptimeout level
+- 📋 Task 3.2: Display remaining timeout for each active instance
+- 🔍 Analyzing current verbose output in `run_command()` function
+
+### 11:00 - Subtask 3.1 Complete
+- ✅ Enhanced verbose output to show clear nesting level indicators
+- ✅ Added start messages with `=== ptimeout (level X) ===` formatting
+- ✅ Added completion messages with ✓/✗ symbols and level numbers
+- ✅ Implemented different messages for success, timeout, and failure cases
+- ✅ Proper indentation based on nesting level for clarity
+- ✅ Non-verbose mode remains unchanged and functional
+- ✅ Created test file `.tmp/test_subtask_3_1_fixed.py` with 5 comprehensive test cases
+- ✅ All tests passed: start output, completion, timeout, failure, non-verbose
+
 ### Notes for Future Sessions
 - Working directory: `/home/linuxdev/Desktop/workshop/studio/ptimeout`
 - Follow strict task ordering: 1.1 → 1.2 → 2.1 → 2.2 → 3.1 → 3.2
-- Task 3 next: Implement verbose output for nested ptimeout execution
+- Subtask 3.2 next: Display current timeout remaining for each active instance
 - Test files in `.tmp/` directory (ignored by git)
 - Remember to commit immediately after each task passes tests

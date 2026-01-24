@@ -236,7 +236,15 @@ def run_command(
 
     if verbose:
         indent = "  " * nesting_level
-        console.print(f"{indent}[bold blue]Running command: " + " ".join(command_args))
+        if nesting_level > 0:
+            console.print(
+                f"{indent}[bold yellow]=== Nested ptimeout (level {nesting_level}) ==="
+            )
+        else:
+            console.print(
+                f"{indent}[bold yellow]=== ptimeout (level {nesting_level}) ==="
+            )
+        console.print(f"{indent}[bold blue]Command: " + " ".join(command_args))
         console.print(f"{indent}[bold blue]Timeout: {timeout}s, Retries: {retries}")
         if piped_stdin_data:
             console.print(
@@ -436,9 +444,15 @@ def run_command(
                     os.killpg(os.getpgid(proc.pid), 9)
                     proc.wait()  # Clean up zombie process
                     live.stop()  # Explicitly stop Live
-                    console.print(
-                        f"[bold red]Timeout of {timeout}s reached. Command terminated."
-                    )
+                    if verbose:
+                        indent = "  " * nesting_level
+                        console.print(
+                            f"{indent}[red]✗ Timeout reached ({timeout}s) - command terminated (level {nesting_level})."
+                        )
+                    else:
+                        console.print(
+                            f"[bold red]Timeout of {timeout}s reached. Command terminated."
+                        )
 
                 if timed_out_by_ptimeout:
                     if attempt >= retries:
@@ -454,7 +468,13 @@ def run_command(
                             )
                             live.refresh()
                         live.stop()  # Explicitly stop Live
-                        console.print(f"[green]Command finished successfully.")
+                        if verbose:
+                            indent = "  " * nesting_level
+                            console.print(
+                                f"{indent}[green]✓ Command completed successfully (level {nesting_level})."
+                            )
+                        else:
+                            console.print(f"[green]Command finished successfully.")
                         final_exit_code = 0
                         break  # Exit retry loop on success
                     else:
@@ -464,9 +484,15 @@ def run_command(
                             )
                             live.refresh()
                         live.stop()  # Explicitly stop Live
-                        console.print(
-                            f"[red]Command failed with exit code {proc.returncode}."
-                        )
+                        if verbose:
+                            indent = "  " * nesting_level
+                            console.print(
+                                f"{indent}[red]✗ Command failed with exit code {proc.returncode} (level {nesting_level})."
+                            )
+                        else:
+                            console.print(
+                                f"[red]Command failed with exit code {proc.returncode}."
+                            )
                         final_exit_code = (
                             proc.returncode
                         )  # Ensure final_exit_code matches the subprocess exit code
