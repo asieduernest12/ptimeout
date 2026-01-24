@@ -86,7 +86,7 @@ cat FILE | ptimeout TIMEOUT [-h] [-v] [-r RETRIES] [-d {up,down}] [-- COMMAND [A
 
 ### Development Environment with Docker Compose
 
-All development, validation, and testing activities must be performed within the `dev` container.
+**IMPORTANT:** It is **ABSOLUTELY FORBIDDEN** to work outside of the dev container. All development, validation, and testing activities must be performed within the `dev` container without exception.
 
 The project uses Docker Compose to set up a consistent development and testing environment.
 
@@ -151,6 +151,6 @@ This command runs the `test` service, which is configured to execute the project
 
 *   **Language:** Python
 *   **Dependency Management:** Project dependencies are managed via `src/ptimeout/requirements.txt`.
-*   **Containerization:** Development, building, and testing are primarily performed within Docker containers to ensure environment consistency and isolate the development environment from the host system.
+*   **Containerization:** Development, building, and testing are primarily performed within Docker containers to ensure environment consistency and isolate the development environment from the host system. **IT IS ABSOLUTELY FORBIDDEN TO WORK OUTSIDE OF THE DEV CONTAINER.**
 *   **Scripting:** Shell scripts (`.sh` files) in the `scripts/` directory are used for installation, uninstallation, and binary building automation.
 *   **Versioning:** The project uses [`commit-and-tag-version`](https://www.npmjs.com/package/commit-and-tag-version) for automated versioning based on commit messages, following Conventional Commits specification.

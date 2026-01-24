@@ -17,4 +17,10 @@ further instructions defined in @.tickets/AGENTS.md should be followed and obser
 
 * follow instructions in AGENTS.md , .tickets/AGENTS.md strictly
 
+
+
 ## use .tmp/ for any temp files or directories needs
+* it is forbidden to make changes outside this project
+
+## AGENTS.md files
+* read all AGENTS.md files before proceeding to work

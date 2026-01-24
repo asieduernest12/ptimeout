@@ -772,6 +772,14 @@ def validate_command_separators(argv, is_piped_input=False):
         # For piped input, -- is optional - if no command is specified, default to cat
         return
 
+    # Check if there are enough arguments (at least script name + timeout + -- + command)
+    if len(argv) < 4:
+        raise ValueError(
+            "The 'TIMEOUT' argument is required. "
+            "Usage: ptimeout TIMEOUT [-- OPTIONS] -- COMMAND [ARGS...]\n"
+            "Example: ptimeout 10s -- ls -la"
+        )
+
     # Find all -- separators in the command line
     separator_indices = [i for i, arg in enumerate(argv) if arg == "--"]
 
@@ -801,12 +809,57 @@ def validate_command_separators(argv, is_piped_input=False):
         )
 
     # Check if -- appears before the timeout argument
-    # sys.argv[0] is the script name, sys.argv[1] should be timeout
-    if separator_index <= 1:
+    # timeout must be present before -- separator, but can have optional args before it
+    # Look for a non-option argument (timeout) before -- separator
+    args_before_separator = argv[1:separator_index]
+    has_timeout = any(not arg.startswith("-") for arg in args_before_separator)
+
+    if not has_timeout:
         raise ValueError(
-            f"'--' separator found at position {separator_index}, but timeout argument is required first. "
-            "The correct order is: ptimeout TIMEOUT [-- OPTIONS] -- COMMAND [ARGS...]\n"
-            "Example: ptimeout 10s -- ls -la"
+            f"'--' separator found but timeout argument is required before it. "
+            "The correct order is: ptimeout [-- OPTIONS] TIMEOUT -- COMMAND [ARGS...]\n"
+            "Example: ptimeout 10s -- ls -la\n"
+            "Example with options: ptimeout --progress-style ascii 10s -- ls -la"
+        )
+
+    if len(separator_indices) > 1:
+        raise ValueError(
+            f"Multiple '--' separators found (at positions {', '.join(map(str, separator_indices))}). "
+            "Only one '--' separator is allowed to separate ptimeout options from the command.\n"
+            "Usage: ptimeout TIMEOUT [-- OPTIONS] -- COMMAND [ARGS...]\n"
+            "Example: ptimeout 10s -v -- ls -la"
+        )
+
+    separator_index = separator_indices[0]
+
+    # Check if -- is at the very end (no command after it)
+    if separator_index == len(argv) - 1:
+        raise ValueError(
+            "No command found after '--' separator. Please specify a command to execute.\n"
+            "Usage: ptimeout TIMEOUT [-- OPTIONS] -- COMMAND [ARGS...]\n"
+            "Example: ptimeout 10s -- echo 'Hello World'"
+        )
+
+    # Check if -- appears before the timeout argument
+    # timeout must be present before -- separator, but can have optional args before it
+    # Look for a non-option argument (timeout) before the -- separator
+    args_before_separator = argv[1:separator_index]
+    has_timeout = any(not arg.startswith("-") for arg in args_before_separator)
+
+    if not has_timeout:
+        raise ValueError(
+            f"'--' separator found but timeout argument is required before it. "
+            "The correct order is: ptimeout [-- OPTIONS] TIMEOUT -- COMMAND [ARGS...]\n"
+            "Example: ptimeout 10s -- ls -la\n"
+            "Example with options: ptimeout --progress-style ascii 10s -- ls -la"
+        )
+
+    if not has_timeout:
+        raise ValueError(
+            f"'--' separator found but timeout argument is required before it. "
+            "The correct order is: ptimeout [-- OPTIONS] TIMEOUT -- COMMAND [ARGS...]\n"
+            "Example: ptimeout 10s -- ls -la\n"
+            "Example with options: ptimeout --progress-style ascii 10s -- ls -la"
         )
 
 
@@ -1127,7 +1180,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Run a command with a time-based progress bar, or process piped input with a timeout.",
         formatter_class=argparse.RawTextHelpFormatter,
-        usage="%(prog)s TIMEOUT [-h] [-v] [-r RETRIES] [-d {up,down}] [--progress-style {unicode,ascii,minimal,fancy}] [--dry-run] [--config CONFIG] -- COMMAND [ARGS...]",
+        usage="%(prog)s [--progress-style {unicode,ascii,minimal,fancy}] [-h] [-v] [-r RETRIES] [-d {up,down}] [--dry-run] [--config CONFIG] TIMEOUT -- COMMAND [ARGS...]",
         parents=[config_parser],  # Include the --config argument
     )
     parser.add_argument(
@@ -1209,10 +1262,6 @@ def main():
         # If no data was read, treat as not piped
         if not piped_stdin_data:
             is_piped_input = False
-
-    if is_piped_input:
-        # Read all of stdin here, as we might need to feed it to a subprocess later
-        piped_stdin_data = sys.stdin.buffer.read()  # Read as bytes
 
     # Parse all arguments first
     args = parser.parse_args()
