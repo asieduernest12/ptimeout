@@ -512,6 +512,59 @@ def run_command(
     return final_exit_code
 
 
+def validate_command_separators(argv, is_piped_input=False):
+    """
+    Validate the presence and correct usage of -- command separators.
+
+    Args:
+        argv: The original command line arguments (sys.argv)
+        is_piped_input: Whether stdin is being piped in
+
+    Returns:
+        None if valid, raises ValueError with helpful message if invalid
+    """
+    if is_piped_input:
+        # For piped input, -- is optional - if no command is specified, default to cat
+        return
+
+    # Find all -- separators in the command line
+    separator_indices = [i for i, arg in enumerate(argv) if arg == "--"]
+
+    if not separator_indices:
+        raise ValueError(
+            "Missing '--' separator. Command must be preceded by '--' to separate from ptimeout options.\n"
+            "Usage: ptimeout TIMEOUT [-- OPTIONS] -- COMMAND [ARGS...]\n"
+            "Example: ptimeout 10s -- ls -la"
+        )
+
+    if len(separator_indices) > 1:
+        raise ValueError(
+            f"Multiple '--' separators found (at positions {', '.join(map(str, separator_indices))}). "
+            "Only one '--' separator is allowed to separate ptimeout options from the command.\n"
+            "Usage: ptimeout TIMEOUT [-- OPTIONS] -- COMMAND [ARGS...]\n"
+            "Example: ptimeout 10s -v -- ls -la"
+        )
+
+    separator_index = separator_indices[0]
+
+    # Check if -- is at the very end (no command after it)
+    if separator_index == len(argv) - 1:
+        raise ValueError(
+            "No command found after '--' separator. Please specify a command to execute.\n"
+            "Usage: ptimeout TIMEOUT [-- OPTIONS] -- COMMAND [ARGS...]\n"
+            "Example: ptimeout 10s -- echo 'Hello World'"
+        )
+
+    # Check if -- appears before the timeout argument
+    # sys.argv[0] is the script name, sys.argv[1] should be timeout
+    if separator_index <= 1:
+        raise ValueError(
+            f"'--' separator found at position {separator_index}, but timeout argument is required first. "
+            "The correct order is: ptimeout TIMEOUT [-- OPTIONS] -- COMMAND [ARGS...]\n"
+            "Example: ptimeout 10s -- ls -la"
+        )
+
+
 def parse_timeout(timeout_str):
     """Converts a timeout string (e.g., '10s', '5m', '1h') to seconds."""
     if not timeout_str or not timeout_str.strip():
@@ -632,9 +685,16 @@ def main():
         help='The command and its arguments to run. Precede with "--" to separate from ptimeout options.',
     )
 
-    # Check if stdin is being piped
+    # Check if stdin is being piped (has actual data)
     is_piped_input = not sys.stdin.isatty()
     piped_stdin_data = None
+
+    if is_piped_input:
+        # Read all of stdin here, as we might need to feed it to a subprocess later
+        piped_stdin_data = sys.stdin.buffer.read()  # Read as bytes
+        # If no data was read, treat as not piped
+        if not piped_stdin_data:
+            is_piped_input = False
 
     if is_piped_input:
         # Read all of stdin here, as we might need to feed it to a subprocess later
@@ -643,8 +703,15 @@ def main():
     # Parse all arguments first
     args = parser.parse_args()
 
+    # Validate command separators
+    try:
+        validate_command_separators(sys.argv, is_piped_input)
+    except ValueError as e:
+        parser.error(str(e))
+
     # Determine command_args
     command_args = args.command
+
     if command_args and command_args[0] == "--":
         command_args = command_args[1:]
 
