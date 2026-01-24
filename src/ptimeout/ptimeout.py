@@ -10,6 +10,15 @@ import time
 from datetime import datetime
 from collections import deque
 
+# Exit code constants following GNU timeout conventions
+EXIT_SUCCESS = 0  # Command completed successfully within timeout
+EXIT_TIMEOUT = 124  # Command timed out
+EXIT_PTIMEOUT_ERROR = 125  # ptimeout internal error
+EXIT_COMMAND_NOT_INVOKABLE = 126  # Command found but cannot be invoked
+EXIT_COMMAND_NOT_FOUND = 127  # Command cannot be found
+EXIT_KILL_SIGNAL = 137  # Command killed by KILL signal (128+9)
+EXIT_INTERRUPTED = 130  # Interrupted by user (Ctrl+C, 128+2)
+
 # Import rich components conditionally
 if sys.stdout.isatty():
     from rich.console import Console
@@ -163,7 +172,7 @@ def run_command(
 
     is_interactive = sys.stdout.isatty()
     console = Console(file=sys.stderr)
-    final_exit_code = 1  # Default to failure
+    final_exit_code = EXIT_PTIMEOUT_ERROR  # Default to ptimeout error
 
     # Check for nested ptimeout command
     is_nested, nested_args, remaining_args = extract_nested_ptimeout(command_args)
@@ -293,16 +302,45 @@ def run_command(
                     console.print(
                         f"[bold red]Timeout of 0s reached. Command not executed."
                     )
-                    final_exit_code = 1
+                    final_exit_code = EXIT_PTIMEOUT_ERROR
                     break  # Exit retry loop
 
-                proc = subprocess.Popen(
-                    command_args,
-                    stdin=subprocess.PIPE if piped_stdin_data else None,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    preexec_fn=os.setsid,  # To kill the whole process group
-                )
+                try:
+                    proc = subprocess.Popen(
+                        command_args,
+                        stdin=subprocess.PIPE if piped_stdin_data else None,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        preexec_fn=os.setsid,  # To kill the whole process group
+                    )
+                except FileNotFoundError:
+                    # Command cannot be found
+                    if verbose:
+                        console.print(f"[red]✗ Command not found: {command_args[0]}")
+                    else:
+                        console.print(f"[red]Command not found: {command_args[0]}")
+                    final_exit_code = EXIT_COMMAND_NOT_FOUND
+                    break  # Exit retry loop
+                except PermissionError:
+                    # Command found but cannot be invoked (permissions)
+                    if verbose:
+                        console.print(f"[red]✗ Permission denied: {command_args[0]}")
+                    else:
+                        console.print(f"[red]Permission denied: {command_args[0]}")
+                    final_exit_code = EXIT_COMMAND_NOT_INVOKABLE
+                    break  # Exit retry loop
+                except OSError as e:
+                    # Other OS-level errors when trying to invoke command
+                    if verbose:
+                        console.print(
+                            f"[red]✗ Cannot execute command {command_args[0]}: {e}"
+                        )
+                    else:
+                        console.print(
+                            f"[red]Cannot execute command {command_args[0]}: {e}"
+                        )
+                    final_exit_code = EXIT_COMMAND_NOT_INVOKABLE
+                    break  # Exit retry loop
 
                 # Thread to feed stdin to the subprocess if data is available
                 stdin_feeder_thread = None
@@ -452,7 +490,7 @@ def run_command(
 
                 if timed_out_by_ptimeout:
                     if attempt >= retries:
-                        final_exit_code = 1
+                        final_exit_code = EXIT_TIMEOUT
                         break  # Exit retry loop as max retries reached
                     else:
                         continue  # Go to next retry
@@ -471,7 +509,7 @@ def run_command(
                             )
                         else:
                             console.print(f"[green]Command finished successfully.")
-                        final_exit_code = 0
+                        final_exit_code = EXIT_SUCCESS
                         break  # Exit retry loop on success
                     else:
                         if is_interactive:
@@ -502,7 +540,7 @@ def run_command(
                 os.killpg(os.getpgid(proc.pid), 9)
             if isinstance(e, KeyboardInterrupt):
                 console.print("\n[yellow]Interrupted by user.")
-                final_exit_code = 130  # Standard exit code for Ctrl+C
+                final_exit_code = EXIT_INTERRUPTED  # Interrupted by user (Ctrl+C)
             else:
                 console.print(f"\n[bold red]An error occurred: {e}")
                 final_exit_code = 1
