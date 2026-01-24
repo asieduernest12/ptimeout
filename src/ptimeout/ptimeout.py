@@ -519,24 +519,52 @@ def parse_timeout(timeout_str):
 
     timeout_str = timeout_str.strip()
 
+    # Check for invalid formats that could cause issues
+    if timeout_str.count("-") > 0:
+        raise ValueError(
+            f"Invalid timeout format: '{timeout_str}'. Timeout values must be positive integers followed by 's', 'm', 'h', or just seconds."
+        )
+
     # If the string consists only of digits, treat it as seconds
     if timeout_str.isdigit():
         try:
-            return int(timeout_str)
+            value = int(timeout_str)
+            if value < 0:
+                raise ValueError(
+                    f"Timeout value must be positive, got: '{timeout_str}'"
+                )
+            return value
         except ValueError:
             # Should not happen if isdigit() is true, but as a safeguard
-            raise ValueError(f"Invalid timeout value: '{timeout_str}'")
+            raise ValueError(
+                f"Invalid timeout value: '{timeout_str}'. Use positive integers followed by 's', 'm', 'h', or just seconds."
+            )
 
     # Otherwise, expect a unit suffix
+    if len(timeout_str) < 2:
+        raise ValueError(
+            f"Invalid timeout format: '{timeout_str}'. Use positive integers followed by 's', 'm', 'h', or just seconds."
+        )
+
     unit = timeout_str[-1].lower()
+    value_part = timeout_str[:-1]
+
+    # Validate the value part
+    if not value_part.isdigit():
+        raise ValueError(
+            f"Invalid timeout format: '{timeout_str}'. The numeric part must be a positive integer."
+        )
 
     try:
-        value = int(timeout_str[:-1])
+        value = int(value_part)
     except ValueError:
         # If conversion to int fails for the value part (e.g., "abcs")
         raise ValueError(
-            f"Invalid timeout value: '{timeout_str}'"
-        )  # Use full timeout_str here
+            f"Invalid timeout value: '{timeout_str}'. Use positive integers followed by 's', 'm', 'h', or just seconds."
+        )
+
+    if value < 0:
+        raise ValueError(f"Timeout value must be positive, got: '{timeout_str}'")
 
     if unit == "s":
         return value
@@ -544,8 +572,10 @@ def parse_timeout(timeout_str):
         return value * 60
     elif unit == "h":
         return value * 60 * 60
-
-    raise ValueError(f"Invalid time unit: '{unit}'. Use 's', 'm', or 'h'.")
+    else:
+        raise ValueError(
+            f"Invalid time unit: '{unit}' in '{timeout_str}'. Use 's', 'm', or 'h'."
+        )
 
 
 def get_version():

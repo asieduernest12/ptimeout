@@ -23,11 +23,11 @@ Implement comprehensive argument validation for both outer and nested `ptimeout`
 ## 6. Subtask Checklist
 
 #### Main Task Structure
-- [ ] Task 1: Implement basic validation for timeout argument format.
+- [-] Task 1: Implement basic validation for timeout argument format.
   - **Problem**: Timeout string format (e.g., "10s", "1m") needs to be strictly validated.
   - **Test**: Unit tests for valid and invalid timeout strings.
   - **Subtasks**:
-    - [ ] Subtask 1.1: Create a utility function to parse and validate timeout strings.
+    - [x] Subtask 1.1: Create a utility function to parse and validate timeout strings.
       - **Objective**: Ensure timeout strings conform to expected formats (e.g., integer followed by 's', 'm', 'h').
       - **Test**: Test the utility function with various valid and invalid inputs.
 - [ ] Task 2: Validate the presence and correct usage of command separators.
