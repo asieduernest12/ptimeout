@@ -54,10 +54,10 @@ Implement functionality to clearly support and visually represent nested `ptimeo
   - **Problem**: Users need clear feedback to understand the hierarchy and status of nested timeouts.
   - **Test**: Run nested commands with the `-v` flag and confirm that the output clearly shows the nesting levels, active timeouts, and process IDs.
   - **Subtasks**:
-    - [-] Subtask 3.1: Add logging or print statements to indicate the start and end of each `ptimeout` level.
+    - [x] Subtask 3.1: Add logging or print statements to indicate the start and end of each `ptimeout` level.
       - **Objective**: Introduce output messages that clearly show when an outer `ptimeout` starts an inner `ptimeout` and when each `ptimeout` level completes or times out.
       - **Test**: Capture `stdout` when running a nested command with `-v` and assert that specific nesting-related messages are present and correctly formatted.
-    - [ ] Subtask 3.2: Display current timeout remaining for each active `ptimeout` instance in verbose mode.
+    - [-] Subtask 3.2: Display current timeout remaining for each active `ptimeout` instance in verbose mode.
       - **Objective**: Enhance the verbose output to show the remaining time for both the outer and inner `ptimeout` processes.
       - **Test**: In verbose mode, verify that the output displays countdowns or remaining times that accurately reflect the state of both the outer and inner timeouts.
 

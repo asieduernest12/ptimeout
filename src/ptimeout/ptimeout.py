@@ -169,64 +169,27 @@ def run_command(
     is_nested, nested_args, remaining_args = extract_nested_ptimeout(command_args)
 
     if is_nested:
-        # Handle nested ptimeout recursively
+        # Handle nested ptimeout by executing it as a subprocess
+        # This allows proper timeout handling for each nested ptimeout instance
+
         if verbose:
             indent = "  " * nesting_level
             console.print(
-                f"{indent}[bold cyan]Nested ptimeout detected (level {nesting_level})"
+                f"{indent}[bold cyan]Nested ptimeout detected (level {nesting_level + 1})"
             )
             console.print(
-                f"{indent}[bold cyan]Inner command: {' '.join(remaining_args) if remaining_args else '(no command)'}"
+                f"{indent}[bold cyan]Nested command: {' '.join(nested_args + remaining_args)}"
             )
 
-        # Recursively call run_command for the nested ptimeout
-        # We need to parse the nested ptimeout args properly
-        # For now, use a simple approach - parse the timeout and pass through remaining
-        full_nested_args = nested_args + remaining_args
+        # Construct the full nested ptimeout command
+        # Use the same executable path but include all the nested arguments
+        nested_command = [sys.executable] + nested_args + (remaining_args or [])
 
-        # Parse the timeout from nested args (skip 'ptimeout', find timeout string)
-        nested_timeout_str = None
-        for i, arg in enumerate(full_nested_args[1:], 1):  # Skip 'ptimeout'
-            if arg == "--":
-                # Next should be timeout if we haven't found it yet
-                if i + 1 < len(full_nested_args):
-                    potential_timeout = full_nested_args[i + 1]
-                    try:
-                        nested_timeout = parse_timeout(potential_timeout)
-                        nested_timeout_str = potential_timeout
-                        break
-                    except ValueError:
-                        continue
-            elif not arg.startswith("-") and arg != "ptimeout":
-                # This might be the timeout
-                try:
-                    nested_timeout = parse_timeout(arg)
-                    nested_timeout_str = arg
-                    break
-                except ValueError:
-                    continue
-
-        if nested_timeout_str is None:
-            nested_timeout_str = "30s"  # Default
-
-        try:
-            nested_timeout = parse_timeout(nested_timeout_str)
-        except ValueError:
-            console.print(f"[bold red]Invalid nested timeout: {nested_timeout_str}")
-            return 1
-
-        # For nested ptimeout, we need to extract the actual command after the '--'
-        # Find the '--' separator in the full nested args
-        try:
-            separator_index = full_nested_args.index("--")
-            actual_command = full_nested_args[separator_index + 1 :]
-        except ValueError:
-            actual_command = remaining_args or []
-
-        # Pass through the same retry and direction options for simplicity
+        # Execute the nested ptimeout with the outer's timeout
+        # This ensures the outer timeout can kill the inner ptimeout if needed
         return run_command(
-            actual_command,  # The actual command to run
-            nested_timeout,
+            nested_command,  # Execute the nested ptimeout command directly
+            timeout,  # Use outer timeout (outer can kill inner)
             retries,
             count_direction,
             piped_stdin_data,
@@ -269,6 +232,13 @@ def run_command(
                     Layout(name="header", size=3), Layout(ratio=1, name="main")
                 )
 
+                # Create task description with nesting level info for verbose display
+                task_description = f"timeout (level {nesting_level})"
+                if nesting_level > 0:
+                    task_description = (
+                        f"  " * (nesting_level - 1) + "└─ " + task_description
+                    )
+
                 progress_columns = [
                     TextColumn("[bold blue]{task.description}", justify="right"),
                     BarColumn(bar_width=None),
@@ -281,7 +251,7 @@ def run_command(
 
                 progress = Progress(*progress_columns, console=console)
                 task_id = progress.add_task(
-                    "timeout", total=timeout if timeout > 0 else 1
+                    task_description, total=timeout if timeout > 0 else 1
                 )
                 layout["header"].update(progress)
                 live_context = Live(
@@ -359,10 +329,36 @@ def run_command(
                 start_time = time.time()
 
                 # The main loop: run until the process finishes or timeout is reached
+                last_verbose_update = 0  # Track last verbose update time
                 while proc.poll() is None and time.time() - start_time < timeout:
                     elapsed = time.time() - start_time
+                    remaining = timeout - elapsed
+
+                    # Update progress for interactive mode
                     if is_interactive:
                         progress.update(task_id, completed=elapsed)
+
+                    # Show countdown in verbose mode (update every 1 second to avoid spam)
+                    if (
+                        verbose
+                        and not is_interactive
+                        and (elapsed - last_verbose_update) >= 1.0
+                    ):
+                        indent = "  " * nesting_level
+                        remaining_str = (
+                            f"{remaining:.1f}s"
+                            if remaining >= 1
+                            else f"{remaining * 1000:.0f}ms"
+                        )
+                        level_desc = (
+                            f"outer"
+                            if nesting_level == 0
+                            else f"nested level {nesting_level}"
+                        )
+                        console.print(
+                            f"{indent}[dim cyan]⏱ {level_desc.title()} timeout remaining: {remaining_str}"
+                        )
+                        last_verbose_update = elapsed
 
                     # Non-blocking read from queues
                     while not q_stdout.empty():
