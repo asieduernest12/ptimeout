@@ -23,7 +23,7 @@ Implement robust signal handling in `ptimeout` to gracefully manage `SIGTERM` an
 ## 6. Subtask Checklist
 
 #### Main Task Structure
-- [-] Task 1: Register signal handlers for `SIGTERM` and `SIGINT`.
+- [x] Task 1: Register signal handlers for `SIGTERM` and `SIGINT`.
   - **Problem**: `ptimeout` needs to actively listen for and respond to termination signals.
   - **Test**: Verify that the signal handlers are correctly registered.
   - **Subtasks**:

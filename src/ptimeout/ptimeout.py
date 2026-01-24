@@ -839,7 +839,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Run a command with a time-based progress bar, or process piped input with a timeout.",
         formatter_class=argparse.RawTextHelpFormatter,
-        usage="%(prog)s TIMEOUT [-h] [-v] [-r RETRIES] [-d {up,down}] [--config CONFIG] -- COMMAND [ARGS...]",
+        usage="%(prog)s TIMEOUT [-h] [-v] [-r RETRIES] [-d {up,down}] [--dry-run] [--config CONFIG] -- COMMAND [ARGS...]",
         parents=[config_parser],  # Include the --config argument
     )
     parser.add_argument(
@@ -874,6 +874,12 @@ def main():
         default=config.get("countdown_direction", "up"),
         help="Specify count direction: 'up' to count elapsed time (default), 'down' to count remaining time.",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="Print the command that would be executed without actually running it.",
+    )
 
     parser.add_argument(
         "command",
@@ -899,6 +905,54 @@ def main():
     # Parse all arguments first
     args = parser.parse_args()
 
+    # Determine command_args
+    command_args = args.command
+
+    if command_args and command_args[0] == "--":
+        command_args = command_args[1:]
+
+    # Handle dry-run mode (before validation to avoid issues with nested commands)
+    if args.dry_run:
+        # For dry-run, we don't need to validate as strictly
+        if not command_args:
+            # If there's piped input but no command, default to 'cat'
+            if is_piped_input:
+                command_args = ["cat"]
+            else:
+                print("")  # Empty command
+                sys.exit(0)
+
+        # Construct and print command that would be executed
+        command_str = " ".join(command_args) if command_args else ""
+
+        # Handle nested ptimeout commands - find the actual command to be executed
+        if command_args:
+            # Look for nested ptimeout pattern
+            ptimeout_indices = [
+                i
+                for i, arg in enumerate(command_args)
+                if arg == "python3"
+                and i + 1 < len(command_args)
+                and "ptimeout.py" in command_args[i + 1]
+            ]
+
+            if ptimeout_indices:
+                # Found nested ptimeout, find its command part
+                ptimeout_start = ptimeout_indices[0]
+                # Find '--' separator for nested ptimeout
+                nested_separator = None
+                for i in range(ptimeout_start + 2, len(command_args)):
+                    if command_args[i] == "--":
+                        nested_separator = i
+                        break
+
+                if nested_separator and nested_separator + 1 < len(command_args):
+                    # Extract inner command
+                    command_str = " ".join(command_args[nested_separator + 1 :])
+
+        print(command_str)
+        sys.exit(0)
+
     # Validate retries
     try:
         validate_retries(args.retries)
@@ -911,18 +965,8 @@ def main():
     except ValueError as e:
         parser.error(str(e))
 
-    # Determine command_args
-    command_args = args.command
-
-    if command_args and command_args[0] == "--":
-        command_args = command_args[1:]
-
     if not command_args:
-        # If there's piped input but no command, default to 'cat'
-        if is_piped_input:
-            command_args = ["cat"]
-        else:
-            parser.error("The 'COMMAND' argument is required, preceded by '--'.")
+        parser.error("The 'COMMAND' argument is required, preceded by '--'.")
 
     # Validate timeout_arg
     # If timeout_arg is None, try to get from config

@@ -20,3 +20,8 @@
 - Created test_cleanup.py to verify no orphaned processes remain after termination
 - Tests passed: No orphaned sleep processes found, no temporary files left behind
 - Subtask 2.1 and 2.2 implementation verified through comprehensive testing
+
+## 2026-01-23 Session Transition
+- Completed ticket-005: Improved signal handling for SIGTERM and SIGINT
+- All acceptance criteria met: signal registration, child termination, no orphans, proper exit codes
+- Moving to ticket-006: Add --dry-run option
