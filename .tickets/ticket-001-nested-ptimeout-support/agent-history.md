@@ -75,9 +75,70 @@
 - ✅ Created test file `.tmp/test_subtask_3_1_fixed.py` with 5 comprehensive test cases
 - ✅ All tests passed: start output, completion, timeout, failure, non-verbose
 
+### 11:05 - Subtask 3.2 Complete
+- ✅ Enhanced countdown display to show remaining time for each active ptimeout instance
+- ✅ Added countdown messages with emoji (⏱) and clear level descriptions ("Outer timeout remaining:", "Nested level X timeout remaining:")
+- ✅ Updated countdown to show every 1 second in verbose non-interactive mode
+- ✅ Fixed nested ptimeout execution to run as subprocess for proper timeout management
+- ✅ Created comprehensive test file `.tmp/test_subtask_3_2.py` with 4 test cases
+- ✅ All tests passed: countdown display, nesting levels, outer timeout behavior, non-verbose mode
+- ✅ Verified AC 1.3 and AC 1.4: outer timeout properly kills inner processes, inner can finish early
+- ✅ Committed changes: feat(ticket-001): complete subtask 3.2 - add countdown display for nested ptimeout instances
+
+### 11:06 - Task 3 Complete
+- ✅ Both Subtask 3.1 (nesting level indicators) and 3.2 (countdown display) complete
+- ✅ Verbose output now clearly shows nested timeout structure and remaining time
+- ✅ All acceptance criteria for nested ptimeout support met
+- ✅ Ready to proceed to next ticket if available
+
+## Session Start: 2026-01-23 [Third Session]
+
+### 12:00:00 - Initial Assessment
+- Reviewed instructions from `ralphy.md` and `.tickets/AGENTS.md`
+- Found that all subtasks (1.1, 1.2, 2.1, 2.2, 3.1, 3.2) are marked complete `[x]`
+- Identified 4 pending acceptance criteria that need to be verified and marked complete
+- Started with AC 1.1: `ptimeout 30s -- ptimeout 40s -- <some command>` executes successfully
+- Updated AC 1.1 status from `[ ]` to `[-]` (in progress)
+
+### 12:05:00 - Testing AC 1.1
+- Objective: Run `ptimeout 5s -- ptimeout 3s -- sleep 2` and ensure it completes within 5 seconds, not 3
+- ✅ Test executed successfully with verbose output
+- ✅ Both ptimeout levels completed successfully with proper nesting indicators
+- ✅ Total execution time: 2.192s (well within both 5s and 3s timeouts)
+- ✅ AC 1.1 marked complete `[x]`
+
+### 12:10:00 - Starting AC 1.2
+- Updated AC 1.2 status from `[ ]` to `[-]` (in progress)
+- Objective: Output clearly indicates the nesting of `ptimeout` commands, showing which `ptimeout` instance is wrapping another
+- Test: Run a nested command and observe verbose output (`-v`) for clear nesting indicators
+- ✅ Verbose output clearly shows command hierarchy: outer ptimeout (8s) → inner ptimeout (4s) → final command
+- ✅ The nesting structure is evident from the displayed commands and timeouts
+- ✅ AC 1.2 marked complete `[x]`
+
+### 12:15:00 - Starting AC 1.3
+- Updated AC 1.3 status from `[ ]` to `[-]` (in progress)
+- Objective: The inner `ptimeout` command's timeout is respected within the outer `ptimeout`'s timeframe
+- Test: Run `ptimeout 3s -- ptimeout 5s -- sleep 4` and expect the inner `ptimeout` to be killed after 3 seconds by the outer `ptimeout` before its own 5s timeout
+- ✅ Test executed: outer timeout (3s) properly killed inner process before inner timeout (5s)
+- ✅ Output confirmed: "Timeout of 3s reached. Command terminated."
+- ✅ AC 1.3 marked complete `[x]`
+
+### 12:20:00 - Starting AC 1.4 (Final)
+- Updated AC 1.4 status from `[ ]` to `[-]` (in progress)
+- Objective: If the inner `ptimeout` finishes before its timeout but the outer `ptimeout` is still running, the outer `ptimeout` continues until its timeout or the command finishes
+- Test: Run `ptimeout 5s -- ptimeout 2s -- sleep 1` and ensure the command finishes successfully within 2 seconds
+- ✅ Test executed successfully: inner command finished in 1.189s, both ptimeout levels completed successfully
+- ✅ Output confirmed: "Command finished successfully." for both levels
+- ✅ AC 1.4 marked complete `[x]`
+
+### 12:25:00 - Ticket 001 Complete!
+- ✅ All 4 acceptance criteria now marked complete `[x]`
+- ✅ All subtasks (1.1, 1.2, 2.1, 2.2, 3.1, 3.2) were already complete from previous sessions
+- ✅ Nested ptimeout support is fully functional and tested
+- ✅ Ready to proceed to next ticket (ticket-002) in the sequence
+
 ### Notes for Future Sessions
 - Working directory: `/home/linuxdev/Desktop/workshop/studio/ptimeout`
-- Follow strict task ordering: 1.1 → 1.2 → 2.1 → 2.2 → 3.1 → 3.2
-- Subtask 3.2 next: Display current timeout remaining for each active instance
+- **All subtasks complete, now working on acceptance criteria**
 - Test files in `.tmp/` directory (ignored by git)
 - Remember to commit immediately after each task passes tests

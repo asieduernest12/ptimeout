@@ -7,13 +7,13 @@ The current `ptimeout` tool does not explicitly support or visualize nested invo
 Implement functionality to clearly support and visually represent nested `ptimeout` commands. The solution will involve parsing the command line arguments to identify nested `ptimeout` invocations and adjusting the execution logic to correctly apply timeouts in a hierarchical manner. Visual feedback will be provided to the user to indicate the nesting depth and the scope of each `ptimeout` instance.
 
 ## 3. Acceptance Criteria
-- [ ] **AC 1.1**: `ptimeout 30s -- ptimeout 40s -- <some command>` executes successfully.
+- [x] **AC 1.1**: `ptimeout 30s -- ptimeout 40s -- <some command>` executes successfully.
   - **Test**: Run `ptimeout 5s -- ptimeout 3s -- sleep 2` and ensure it completes within 5 seconds, not 3.
-- [ ] **AC 1.2**: Output clearly indicates the nesting of `ptimeout` commands, showing which `ptimeout` instance is wrapping another.
+- [x] **AC 1.2**: Output clearly indicates the nesting of `ptimeout` commands, showing which `ptimeout` instance is wrapping another.
   - **Test**: Run a nested command and observe verbose output (`-v`) for clear nesting indicators.
-- [ ] **AC 1.3**: The inner `ptimeout` command's timeout is respected within the outer `ptimeout`'s timeframe.
+- [x] **AC 1.3**: The inner `ptimeout` command's timeout is respected within the outer `ptimeout`'s timeframe.
   - **Test**: Run `ptimeout 3s -- ptimeout 5s -- sleep 4` and expect the inner `ptimeout` to be killed after 3 seconds by the outer `ptimeout` before its own 5s timeout.
-- [ ] **AC 1.4**: If the inner `ptimeout` finishes before its timeout but the outer `ptimeout` is still running, the outer `ptimeout` continues until its timeout or the command finishes.
+- [x] **AC 1.4**: If the inner `ptimeout` finishes before its timeout but the outer `ptimeout` is still running, the outer `ptimeout` continues until its timeout or the command finishes.
   - **Test**: Run `ptimeout 5s -- ptimeout 2s -- sleep 1` and ensure the command finishes successfully within 2 seconds.
 
 ## 4. Technical Considerations
@@ -50,14 +50,14 @@ Implement functionality to clearly support and visually represent nested `ptimeo
       - **Objective**: Implement robust logic to ensure that when an outer `ptimeout` terminates, it correctly propagates the termination signal to its child `ptimeout` process, and vice-versa.
       - **Test**: Create a scenario where the outer `ptimeout` times out, and verify that the inner `ptimeout` process (and its child command) is also terminated. Similarly, test when the inner command finishes, the outer `ptimeout` correctly proceeds.
 
-- [-] Task 3: Implement verbose output for nested `ptimeout` execution.
+- [x] Task 3: Implement verbose output for nested `ptimeout` execution.
   - **Problem**: Users need clear feedback to understand the hierarchy and status of nested timeouts.
   - **Test**: Run nested commands with the `-v` flag and confirm that the output clearly shows the nesting levels, active timeouts, and process IDs.
   - **Subtasks**:
     - [x] Subtask 3.1: Add logging or print statements to indicate the start and end of each `ptimeout` level.
       - **Objective**: Introduce output messages that clearly show when an outer `ptimeout` starts an inner `ptimeout` and when each `ptimeout` level completes or times out.
       - **Test**: Capture `stdout` when running a nested command with `-v` and assert that specific nesting-related messages are present and correctly formatted.
-    - [-] Subtask 3.2: Display current timeout remaining for each active `ptimeout` instance in verbose mode.
+    - [x] Subtask 3.2: Display current timeout remaining for each active `ptimeout` instance in verbose mode.
       - **Objective**: Enhance the verbose output to show the remaining time for both the outer and inner `ptimeout` processes.
       - **Test**: In verbose mode, verify that the output displays countdowns or remaining times that accurately reflect the state of both the outer and inner timeouts.
 
