@@ -52,23 +52,28 @@ Refactor the existing `argparse`-based command-line interface to use the `click`
         - For ptimeout nested calls: Use click's invoke() method for recursive execution
         - Context sharing allows parameters to flow between nested levels
         - Error handling and help generation work automatically across levels
-- [-] Task 2: Migrate `ptimeout`'s main command and arguments to `click`.
+- [x] Task 2: Migrate `ptimeout`'s main command and arguments to `click`.
   - **Problem**: The existing `argparse` code needs to be replaced with `click` decorators and functions.
   - **Test**: Unit tests for the new `click`-based CLI, ensuring all arguments are parsed correctly.
   - **Subtasks**:
     - [x] Subtask 2.1: Convert `ptimeout`'s top-level arguments (timeout, verbose, retries, direction) to `click` options.
       - **Objective**: Re-implement the main `ptimeout` command using `click.command()` and `click.option()`.
       - **Test**: Run `ptimeout --help` (after migration) and verify that all top-level options are correctly displayed.
-    - [-] Subtask 2.2: Migrate the existing command execution logic to be compatible with `click`'s context management.
+    -     [x] Subtask 2.2: Migrate the existing command execution logic to be compatible with `click`'s context management.
       - **Objective**: Adapt the `run_command_with_timeout` function to receive arguments from `click`'s parsing.
       - **Test**: Run basic `ptimeout` commands (e.g., `ptimeout 5s -- ls`) and confirm they execute correctly.
 - [ ] Task 3: Integrate nested `ptimeout` command parsing with `click` subcommands.
   - **Problem**: The unique challenge of `ptimeout` is handling itself as a subcommand.
   - **Test**: Integration tests for nested `ptimeout` calls, ensuring `click` correctly parses and dispatches them.
   - **Subtasks**:
-    - [ ] Subtask 3.1: Define a `click` subcommand for `ptimeout` itself to handle nested calls.
+    - [x] Subtask 3.1: Define a `click` subcommand for `ptimeout` itself to handle nested calls.
       - **Objective**: Create a `click` command that represents the inner `ptimeout` invocation.
       - **Test**: Design a `click`-based test that simulates parsing `ptimeout 5s -- ptimeout 3s -- ls`.
-    - [ ] Subtask 3.2: Update the `ptimeout` execution logic to recursively invoke `click` for nested commands.
+      - **Progress**: COMPLETED - Click migration complete, nested command validation and execution working correctly.
+        - Fixed command extraction logic for nested commands
+        - Skipped separator validation for nested commands (handled at execution time)
+        - Successfully tested with multiple scenarios: basic nested, verbose mode, timeout scenarios
+    - [-] Subtask 3.2: Update the `ptimeout` execution logic to recursively invoke `click` for nested commands.
       - **Objective**: When a nested `ptimeout` is detected, use `click`'s internal mechanisms to parse and execute the inner command.
       - **Test**: Run complex nested `ptimeout` commands and verify their correct execution through the `click` interface.
+      - **Progress**: Implementation complete - nested commands execute correctly through click interface.

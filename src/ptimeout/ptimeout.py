@@ -11,6 +11,7 @@ import threading
 import time
 from datetime import datetime
 from collections import deque
+import click
 
 # Exit code constants following GNU timeout conventions
 EXIT_SUCCESS = 0  # Command completed successfully within timeout
@@ -796,13 +797,39 @@ def validate_command_separators(argv, is_piped_input=False):
             "Example: ptimeout 10s -- ls -la"
         )
 
-    if len(separator_indices) > 1:
+    if len(separator_indices) > 2:
         raise ValueError(
-            f"Multiple '--' separators found (at positions {', '.join(map(str, separator_indices))}). "
-            "Only one '--' separator is allowed to separate ptimeout options from the command.\n"
+            f"Too many '--' separators found (at positions {', '.join(map(str, separator_indices))}). "
+            "Maximum of 2 '--' separators allowed (for nested ptimeout commands).\n"
             "Usage: ptimeout TIMEOUT [-- OPTIONS] -- COMMAND [ARGS...]\n"
-            "Example: ptimeout 10s -v -- ls -la"
+            "Example: ptimeout 10s -- ls -la\n"
+            "Example (nested): ptimeout 10s -- ptimeout 5s -- ls -la"
         )
+
+    # For nested ptimeout commands, allow exactly 2 separators
+    # Otherwise, allow only 1 separator for regular commands
+    if len(separator_indices) == 2:
+        # This is a nested ptimeout command - validate structure
+        first_separator = separator_indices[0]
+        second_separator = separator_indices[1]
+
+        # Check if there are valid arguments between separators
+        if second_separator <= first_separator + 1:
+            raise ValueError(
+                f"Invalid nested ptimeout structure. "
+                "Expected: ptimeout TIMEOUT -- ptimeout TIMEOUT -- COMMAND\n"
+                "Example: ptimeout 10s -- ptimeout 5s -- ls -la"
+            )
+
+        # Check if there's a command after the second separator
+        if second_separator == len(argv) - 1:
+            raise ValueError(
+                f"No command found after second '--' separator in nested ptimeout. "
+                "Expected: ptimeout TIMEOUT -- ptimeout TIMEOUT -- COMMAND\n"
+                "Example: ptimeout 10s -- ptimeout 5s -- ls -la"
+            )
+    # The logic for len(separator_indices) > 2 is already handled above
+    # This elif block is redundant and causes confusion
 
     separator_index = separator_indices[0]
 
@@ -819,46 +846,6 @@ def validate_command_separators(argv, is_piped_input=False):
     # Look for a non-option argument (timeout) before -- separator
     args_before_separator = argv[1:separator_index]
     has_timeout = any(not arg.startswith("-") for arg in args_before_separator)
-
-    if not has_timeout:
-        raise ValueError(
-            f"'--' separator found but timeout argument is required before it. "
-            "The correct order is: ptimeout [-- OPTIONS] TIMEOUT -- COMMAND [ARGS...]\n"
-            "Example: ptimeout 10s -- ls -la\n"
-            "Example with options: ptimeout --progress-style ascii 10s -- ls -la"
-        )
-
-    if len(separator_indices) > 1:
-        raise ValueError(
-            f"Multiple '--' separators found (at positions {', '.join(map(str, separator_indices))}). "
-            "Only one '--' separator is allowed to separate ptimeout options from the command.\n"
-            "Usage: ptimeout TIMEOUT [-- OPTIONS] -- COMMAND [ARGS...]\n"
-            "Example: ptimeout 10s -v -- ls -la"
-        )
-
-    separator_index = separator_indices[0]
-
-    # Check if -- is at the very end (no command after it)
-    if separator_index == len(argv) - 1:
-        raise ValueError(
-            "No command found after '--' separator. Please specify a command to execute.\n"
-            "Usage: ptimeout TIMEOUT [-- OPTIONS] -- COMMAND [ARGS...]\n"
-            "Example: ptimeout 10s -- echo 'Hello World'"
-        )
-
-    # Check if -- appears before the timeout argument
-    # timeout must be present before -- separator, but can have optional args before it
-    # Look for a non-option argument (timeout) before the -- separator
-    args_before_separator = argv[1:separator_index]
-    has_timeout = any(not arg.startswith("-") for arg in args_before_separator)
-
-    if not has_timeout:
-        raise ValueError(
-            f"'--' separator found but timeout argument is required before it. "
-            "The correct order is: ptimeout [-- OPTIONS] TIMEOUT -- COMMAND [ARGS...]\n"
-            "Example: ptimeout 10s -- ls -la\n"
-            "Example with options: ptimeout --progress-style ascii 10s -- ls -la"
-        )
 
     if not has_timeout:
         raise ValueError(
@@ -1162,9 +1149,79 @@ def get_version():
         return "0.0.0"
 
 
-def main():
-    # Register signal handlers for graceful termination
-    register_signal_handlers()
+@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.option(
+    "--version",
+    is_flag=True,
+    callback=lambda ctx, param, value: click.echo(get_version()) if value else None,
+    expose_value=False,
+    is_eager=True,
+    help="Show version and exit.",
+)
+@click.option("--config", type=str, help="Path to configuration file.")
+@click.option("-v", "--verbose", is_flag=True, help="Enable verbose output.")
+@click.option(
+    "-r",
+    "--retries",
+    type=int,
+    default=0,
+    help="Max number of times to retry the command upon failure. Defaults to 0.",
+)
+@click.option(
+    "-d",
+    "--count-direction",
+    type=click.Choice(["up", "down"]),
+    default="up",
+    help="Specify count direction: 'up' to count elapsed time (default), 'down' to count remaining time.",
+)
+@click.option(
+    "--progress-style",
+    type=click.Choice(["unicode", "ascii", "minimal", "fancy"]),
+    default="unicode",
+    help="Progress bar style: 'unicode' (default), 'ascii', 'minimal', 'fancy'.",
+)
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Print the command that would be executed without actually running it.",
+)
+@click.option(
+    "-b",
+    "--background",
+    is_flag=True,
+    help="Run the command in the background and print the process ID.",
+)
+@click.option(
+    "--stdout",
+    type=str,
+    help="Redirect stdout to the specified file (useful with --background).",
+)
+@click.option(
+    "--stderr",
+    type=str,
+    help="Redirect stderr to the specified file (useful with --background).",
+)
+@click.argument("timeout_arg", type=str)
+@click.argument("command", nargs=-1, required=False)
+def main(
+    config,
+    verbose,
+    retries,
+    count_direction,
+    progress_style,
+    dry_run,
+    background,
+    stdout,
+    stderr,
+    timeout_arg,
+    command,
+):
+    """Run a command with a time-based progress bar, or process piped input with a timeout.
+
+    TIMEOUT: The maximum execution time. Use optional suffixes: s (seconds), m (minutes), h (hours). E.g., '10s', '5m', '1h'. Can be set in config file.
+
+    COMMAND: The command and its arguments to run. Precede with "--" to separate from ptimeout options.
+    """
 
     # Check if this is a systemd generate command
     if len(sys.argv) >= 2 and sys.argv[1] == "systemd":
@@ -1172,91 +1229,21 @@ def main():
             handle_systemd_generate()
             return
 
-    # First parse just the --config argument to determine config file location
-    config_parser = argparse.ArgumentParser(add_help=False)
-    config_parser.add_argument("--config", type=str)
-
-    # Parse only config-related arguments
-    config_args, remaining_args = config_parser.parse_known_args()
+    # Register signal handlers for graceful termination
+    register_signal_handlers()
 
     # Load configuration from file (using CLI config if provided)
-    config = load_config(config_args.config)
+    loaded_config = load_config(config)
 
-    # Now parse all arguments with config-loaded defaults
-    parser = argparse.ArgumentParser(
-        description="Run a command with a time-based progress bar, or process piped input with a timeout.",
-        formatter_class=argparse.RawTextHelpFormatter,
-        usage="%(prog)s [--progress-style {unicode,ascii,minimal,fancy}] [-h] [-v] [-r RETRIES] [-d {up,down}] [--dry-run] [--config CONFIG] TIMEOUT -- COMMAND [ARGS...]",
-        parents=[config_parser],  # Include the --config argument
-    )
-    parser.add_argument(
-        "--version", action="version", version=f"%(prog)s {get_version()}"
-    )
-
-    parser.add_argument(
-        "timeout_arg",
-        type=str,
-        help="The maximum execution time. Use optional suffixes: s (seconds), m (minutes), h (hours). E.g., '10s', '5m', '1h'. Can be set in config file.",
-    )
-
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=config.get("verbose", False),
-        help="Enable verbose output.",
-    )
-    parser.add_argument(
-        "-r",
-        "--retries",
-        type=int,
-        default=config.get("retries", 0),
-        help="Max number of times to retry the command upon failure. Defaults to 0.",
-    )
-    parser.add_argument(
-        "-d",
-        "--count-direction",
-        type=str,
-        choices=["up", "down"],
-        default=config.get("countdown_direction", "up"),
-        help="Specify count direction: 'up' to count elapsed time (default), 'down' to count remaining time.",
-    )
-    parser.add_argument(
-        "--progress-style",
-        type=str,
-        choices=["unicode", "ascii", "minimal", "fancy"],
-        default=config.get("progress_style", "unicode"),
-        help="Progress bar style: 'unicode' (default), 'ascii', 'minimal', 'fancy'.",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        default=False,
-        help="Print the command that would be executed without actually running it.",
-    )
-    parser.add_argument(
-        "-b",
-        "--background",
-        action="store_true",
-        default=False,
-        help="Run the command in the background and print the process ID.",
-    )
-    parser.add_argument(
-        "--stdout",
-        type=str,
-        help="Redirect stdout to the specified file (useful with --background).",
-    )
-    parser.add_argument(
-        "--stderr",
-        type=str,
-        help="Redirect stderr to the specified file (useful with --background).",
-    )
-
-    parser.add_argument(
-        "command",
-        nargs=argparse.REMAINDER,
-        help='The command and its arguments to run. Precede with "--" to separate from ptimeout options.',
-    )
+    # Apply config defaults if not specified via CLI
+    if not verbose and loaded_config.get("verbose"):
+        verbose = loaded_config["verbose"]
+    if retries == 0 and loaded_config.get("retries"):
+        retries = loaded_config["retries"]
+    if count_direction == "up" and loaded_config.get("countdown_direction"):
+        count_direction = loaded_config["countdown_direction"]
+    if progress_style == "unicode" and loaded_config.get("progress_style"):
+        progress_style = loaded_config["progress_style"]
 
     # Check if stdin is being piped (has actual data)
     is_piped_input = not sys.stdin.isatty()
@@ -1269,17 +1256,28 @@ def main():
         if not piped_stdin_data:
             is_piped_input = False
 
-    # Parse all arguments first
-    args = parser.parse_args()
+    # Determine command_args from click's command tuple
+    command_args = list(command) if command else []
 
-    # Determine command_args
-    command_args = args.command
+    # Check for nested ptimeout - need to handle multiple '--' separators
+    # For nested commands, we need to look at the original sys.argv since click consumes separators
+    separator_indices = [i for i, arg in enumerate(sys.argv) if arg == "--"]
+    if len(separator_indices) == 2:
+        # This is a nested ptimeout command - extract outer command correctly
+        first_separator = separator_indices[0]
+        second_separator = separator_indices[1]
 
-    if command_args and command_args[0] == "--":
-        command_args = command_args[1:]
+        # The command for outer ptimeout is everything between first and second '--' INCLUDING the second '--' and what follows
+        # This should be: ['python', 'ptimeout.py', '5s', '--', 'echo', 'nested test']
+        outer_command = sys.argv[first_separator + 1 :]
+        command_args = outer_command
+    else:
+        # Handle the case where command starts with "--" (single separator case)
+        if command_args and command_args[0] == "--":
+            command_args = command_args[1:]
 
     # Handle dry-run mode (before validation to avoid issues with nested commands)
-    if args.dry_run:
+    if dry_run:
         # For dry-run, we don't need to validate as strictly
         if not command_args:
             # If there's piped input but no command, default to 'cat'
@@ -1322,49 +1320,60 @@ def main():
 
     # Validate retries
     try:
-        validate_retries(args.retries)
+        validate_retries(retries)
     except ValueError as e:
-        parser.error(str(e))
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(EXIT_PTIMEOUT_ERROR)
 
     # Validate command separators
     try:
-        validate_command_separators(sys.argv, is_piped_input)
+        # For nested commands (2 separators), skip full validation since each command will be validated separately
+        if len(separator_indices) != 2:
+            validate_command_separators(sys.argv, is_piped_input)
     except ValueError as e:
-        parser.error(str(e))
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(EXIT_PTIMEOUT_ERROR)
 
     if not command_args:
-        parser.error("The 'COMMAND' argument is required, preceded by '--'.")
+        click.echo(
+            "Error: The 'COMMAND' argument is required, preceded by '--'.", err=True
+        )
+        sys.exit(EXIT_PTIMEOUT_ERROR)
 
     # Validate timeout_arg
     # If timeout_arg is None, try to get from config
-    timeout_arg = args.timeout_arg
     if timeout_arg is None:
-        timeout_arg = config.get("timeout")
+        timeout_arg = loaded_config.get("timeout")
 
     if timeout_arg is None:
-        parser.error(
-            "The 'TIMEOUT' argument is required (either on command line or in config file)."
+        click.echo(
+            "Error: The 'TIMEOUT' argument is required (either on command line or in config file).",
+            err=True,
         )
+        sys.exit(EXIT_PTIMEOUT_ERROR)
 
     try:
         timeout_seconds = parse_timeout(timeout_arg)
     except ValueError as e:
-        parser.error(str(e))
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(EXIT_PTIMEOUT_ERROR)
 
     exit_code = run_command(
         command_args,
         timeout_seconds,
-        args.retries,
-        args.count_direction,
+        retries,
+        count_direction,
         piped_stdin_data,
-        args.verbose,
-        background=args.background,
-        stdout_file=getattr(args, "stdout", None),
-        stderr_file=getattr(args, "stderr", None),
-        progress_style=args.progress_style,
+        verbose,
+        background=background,
+        stdout_file=stdout,
+        stderr_file=stderr,
+        progress_style=progress_style,
     )
     sys.exit(exit_code)
 
 
 if __name__ == "__main__":
     main()
+# Test change Sat 24 Jan 2026 12:47:43 AM EST
+# Final test Sat 24 Jan 2026 12:48:29 AM EST
