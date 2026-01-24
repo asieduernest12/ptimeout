@@ -512,6 +512,28 @@ def run_command(
     return final_exit_code
 
 
+def validate_retries(retries):
+    """
+    Validate the retries argument type and range.
+
+    Args:
+        retries: The retries value to validate
+
+    Returns:
+        None if valid, raises ValueError with helpful message if invalid
+    """
+    if retries is None:
+        return  # Should not happen with argparse default, but handle gracefully
+
+    if not isinstance(retries, int):
+        raise ValueError(f"Retries must be an integer, got: {type(retries).__name__}")
+
+    if retries < 0:
+        raise ValueError(
+            f"Retries must be a non-negative integer, got: {retries}. Example: ptimeout -r 3 30s -- echo hello"
+        )
+
+
 def validate_command_separators(argv, is_piped_input=False):
     """
     Validate the presence and correct usage of -- command separators.
@@ -568,14 +590,16 @@ def validate_command_separators(argv, is_piped_input=False):
 def parse_timeout(timeout_str):
     """Converts a timeout string (e.g., '10s', '5m', '1h') to seconds."""
     if not timeout_str or not timeout_str.strip():
-        raise ValueError("Timeout string cannot be empty.")
+        raise ValueError(
+            "Timeout string cannot be empty. Use positive integers followed by 's', 'm', 'h', or just seconds. Example: ptimeout 10s -- echo hello"
+        )
 
     timeout_str = timeout_str.strip()
 
     # Check for invalid formats that could cause issues
     if timeout_str.count("-") > 0:
         raise ValueError(
-            f"Invalid timeout format: '{timeout_str}'. Timeout values must be positive integers followed by 's', 'm', 'h', or just seconds."
+            f"Invalid timeout format: '{timeout_str}'. Timeout values must be positive integers followed by 's', 'm', 'h', or just seconds. Example: ptimeout 30s -- echo hello"
         )
 
     # If the string consists only of digits, treat it as seconds
@@ -596,7 +620,7 @@ def parse_timeout(timeout_str):
     # Otherwise, expect a unit suffix
     if len(timeout_str) < 2:
         raise ValueError(
-            f"Invalid timeout format: '{timeout_str}'. Use positive integers followed by 's', 'm', 'h', or just seconds."
+            f"Invalid timeout format: '{timeout_str}'. Use positive integers followed by 's', 'm', 'h', or just seconds. Example: ptimeout 30 -- echo hello"
         )
 
     unit = timeout_str[-1].lower()
@@ -605,7 +629,7 @@ def parse_timeout(timeout_str):
     # Validate the value part
     if not value_part.isdigit():
         raise ValueError(
-            f"Invalid timeout format: '{timeout_str}'. The numeric part must be a positive integer."
+            f"Invalid timeout format: '{timeout_str}'. The numeric part must be a positive integer. Example: ptimeout 30s -- echo hello"
         )
 
     try:
@@ -613,11 +637,13 @@ def parse_timeout(timeout_str):
     except ValueError:
         # If conversion to int fails for the value part (e.g., "abcs")
         raise ValueError(
-            f"Invalid timeout value: '{timeout_str}'. Use positive integers followed by 's', 'm', 'h', or just seconds."
+            f"Invalid timeout value: '{timeout_str}'. Use positive integers followed by 's', 'm', 'h', or just seconds. Example: ptimeout 30s -- echo hello"
         )
 
     if value < 0:
-        raise ValueError(f"Timeout value must be positive, got: '{timeout_str}'")
+        raise ValueError(
+            f"Timeout value must be positive, got: '{timeout_str}'. Example: ptimeout 30s -- echo hello"
+        )
 
     if unit == "s":
         return value
@@ -627,7 +653,7 @@ def parse_timeout(timeout_str):
         return value * 60 * 60
     else:
         raise ValueError(
-            f"Invalid time unit: '{unit}' in '{timeout_str}'. Use 's', 'm', or 'h'."
+            f"Invalid time unit: '{unit}' in '{timeout_str}'. Use 's', 'm', or 'h'. Example: ptimeout 30s -- echo hello"
         )
 
 
@@ -702,6 +728,12 @@ def main():
 
     # Parse all arguments first
     args = parser.parse_args()
+
+    # Validate retries
+    try:
+        validate_retries(args.retries)
+    except ValueError as e:
+        parser.error(str(e))
 
     # Validate command separators
     try:

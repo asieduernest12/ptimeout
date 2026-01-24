@@ -37,3 +37,25 @@ Implement comprehensive argument validation for both outer and nested `ptimeout`
     [x] Subtask 2.1: Enhance argument parsing to check for `--` in the correct positions.
       - **Objective**: Ensure that a `--` is present before the command to be executed, and appropriately handled for nested commands.
       - **Test**: Test with inputs like `ptimeout 10s cmd` (should fail) and `ptimeout 10s -- cmd` (should pass).
+
+- [x] Task 3: Validate other ptimeout arguments (retries, countdown direction).
+  - **Problem**: Arguments like retries (-r) and countdown direction (-d) need validation for correct types and ranges.
+  - **Test**: Unit tests for invalid retries (negative, non-integer) and invalid count direction values.
+  - **Subtasks**:
+    - [x] Subtask 3.1: Add validation for retries argument type and range.
+      - **Objective**: Ensure retries is a non-negative integer.
+      - **Test**: Test with ptimeout 10s -r -1 -- echo test (should fail) and ptimeout 10s -r 3 -- echo test (should pass).
+    - [x] Subtask 3.2: Add validation for count direction choices.
+      - **Objective**: Ensure count direction is either 'up' or 'down'.
+      - **Test**: Test with ptimeout 10s -d invalid -- echo test (should fail) and ptimeout 10s -d down -- echo test (should pass).
+
+- [x] Task 4: Enhance error messages for better user experience.
+  - **Problem**: Validation errors should be user-friendly and suggest correct usage patterns.
+  - **Test**: Verify all error messages provide helpful guidance and usage examples.
+  - **Subtasks**:
+    - [x] Subtask 4.1: Standardize error message format across all validation failures.
+      - **Objective**: Ensure consistent error message structure with problem description and suggested solution.
+      - **Test**: Review all validation error messages for consistency and helpfulness.
+    - [x] Subtask 4.2: Add usage examples to all error messages.
+      - **Objective**: Provide concrete examples showing correct usage for each error type.
+      - **Test**: Verify each error message includes at least one usage example.
