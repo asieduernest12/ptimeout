@@ -7,10 +7,10 @@ Users might want to set default timeouts, retry strategies, or verbose output gl
 Introduce a configuration file (e.g., `~/.config/ptimeout/config.ini` or similar) where users can define default values for `ptimeout` arguments. These defaults will be loaded and applied if not explicitly overridden on the command line.
 
 ## 3. Acceptance Criteria
-- [ ] AC 1.1: `ptimeout` loads default settings from a predefined configuration file if it exists.
-- [ ] AC 1.2: Command-line arguments explicitly provided by the user override settings from the configuration file.
-- [ ] AC 1.3: Supported configuration options include default timeout, retries, and countdown direction.
-- [ ] AC 1.4: The configuration file path is customizable via an environment variable or a command-line flag.
+- [x] AC 1.1: `ptimeout` loads default settings from a predefined configuration file if it exists.
+- [x] AC 1.2: Command-line arguments explicitly provided by the user override settings from the configuration file.
+- [x] AC 1.3: Supported configuration options include default timeout, retries, and countdown direction.
+- [x] AC 1.4: The configuration file path is customizable via an environment variable or a command-line flag.
 
 ## 4. Technical Considerations
 - **Configuration Parsing**: Choose a suitable library for parsing configuration files (e.g., `configparser` in Python).
@@ -23,7 +23,7 @@ Introduce a configuration file (e.g., `~/.config/ptimeout/config.ini` or similar
 ## 6. Subtask Checklist
 
 #### Main Task Structure
-- [ ] Task 1: Define the structure and location of the configuration file.
+- [x] Task 1: Define the structure and location of the configuration file.
   - **Problem**: Need to decide on a file format (e.g., INI, YAML, JSON) and a standard location for the configuration file.
   - **Test**: Document the chosen format and location.
   - **Subtasks**:
@@ -43,3 +43,17 @@ Introduce a configuration file (e.g., `~/.config/ptimeout/config.ini` or similar
     - [x] Subtask 2.2: Integrate configuration loading into `ptimeout`'s main execution flow.
       - **Objective**: Modify the main script to load defaults from the config file before `argparse` processes command-line arguments, ensuring command-line overrides.
       - **Test**: Run `ptimeout` with and without a configuration file, and verify that defaults are applied correctly and overridden by CLI arguments.
+
+- [x] Task 3: Add customizable config file path support.
+  - **Problem**: Users may want to use a different configuration file location or override the default path.
+  - **Test**: Verify that environment variable and command-line flag properly override the default config path.
+  - **Subtasks**:
+    - [x] Subtask 3.1: Add environment variable support for config file path.
+      - **Objective**: Allow users to set `PTIMEOUT_CONFIG` environment variable to specify custom config file path.
+      - **Test**: Test with various PTIMEOUT_CONFIG values and verify correct file loading.
+    - [x] Subtask 3.2: Add command-line flag for config file path.
+      - **Objective**: Add `--config` flag to allow specifying config file path via CLI.
+      - **Test**: Verify --config flag properly overrides default and environment variable settings.
+    - [x] Subtask 3.3: Implement precedence order for config path resolution.
+      - **Objective**: Define and implement proper precedence: CLI flag > environment variable > default path.
+      - **Test**: Create comprehensive tests for all precedence scenarios.

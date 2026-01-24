@@ -116,13 +116,13 @@ def load_config(config_path=None):
     Load configuration from an INI file.
 
     Args:
-        config_path: Path to the configuration file. If None, uses DEFAULT_CONFIG_FILE.
+        config_path: Path to the configuration file. If None, uses PTIMEOUT_CONFIG env var or DEFAULT_CONFIG_FILE.
 
     Returns:
         dict: Dictionary containing configuration settings. Empty dict if file not found or invalid.
     """
     if config_path is None:
-        config_path = DEFAULT_CONFIG_FILE
+        config_path = os.environ.get("PTIMEOUT_CONFIG", DEFAULT_CONFIG_FILE)
 
     config = {}
 
@@ -769,19 +769,26 @@ def get_version():
 
 
 def main():
-    # Load configuration from file
-    config = load_config()
+    # First parse just the --config argument to determine config file location
+    config_parser = argparse.ArgumentParser(add_help=False)
+    config_parser.add_argument("--config", type=str)
 
+    # Parse only config-related arguments
+    config_args, remaining_args = config_parser.parse_known_args()
+
+    # Load configuration from file (using CLI config if provided)
+    config = load_config(config_args.config)
+
+    # Now parse all arguments with config-loaded defaults
     parser = argparse.ArgumentParser(
         description="Run a command with a time-based progress bar, or process piped input with a timeout.",
         formatter_class=argparse.RawTextHelpFormatter,
-        usage="%(prog)s TIMEOUT [-h] [-v] [-r RETRIES] [-d {up,down}] -- COMMAND [ARGS...]",
+        usage="%(prog)s TIMEOUT [-h] [-v] [-r RETRIES] [-d {up,down}] [--config CONFIG] -- COMMAND [ARGS...]",
+        parents=[config_parser],  # Include the --config argument
     )
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {get_version()}"
     )
-    # The default help argument is handled automatically by argparse.
-    # We do not explicitly add "-h", "--help" here to avoid conflicts.
 
     parser.add_argument(
         "timeout_arg",
