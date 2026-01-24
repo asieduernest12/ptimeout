@@ -7,10 +7,10 @@ The current progress bar might not be suitable for all terminal types or user pr
 Implement support for configurable progress bar styles. This could involve offering a few predefined styles (e.g., ASCII-only, Unicode, minimal) and potentially allowing users to define custom formats.
 
 ## 3. Acceptance Criteria
-- [ ] AC 1.1: Users can select from at least two different predefined progress bar styles via a command-line option.
-- [ ] AC 1.2: One style is guaranteed to be ASCII-only for maximum terminal compatibility.
-- [ ] AC 1.3: The selected style is applied to the interactive progress bar.
-- [ ] AC 1.4: Documentation explains how to choose and preview different styles.
+- [x] AC 1.1: Users can select from at least two different predefined progress bar styles via a command-line option.
+- [x] AC 1.2: One style is guaranteed to be ASCII-only for maximum terminal compatibility.
+- [x] AC 1.3: The selected style is applied to the interactive progress bar.
+- [x] AC 1.4: Documentation explains how to choose and preview different styles.
 
 ## 4. Technical Considerations
 - **Terminal Compatibility**: Ensure styles render correctly across various terminal emulators.
@@ -35,7 +35,7 @@ Implement support for configurable progress bar styles. This could involve offer
         - tqdm: Popular but less customization than rich, heavier dependency
         - Custom ASCII: More control but requires significant implementation effort
         - **Recommendation**: Continue using rich, extend its built-in styling capabilities
-    - [-] Subtask 1.2: Define at least two distinct progress bar styles: one ASCII-only, one more visually rich.
+    - [x] Subtask 1.2: Define at least two distinct progress bar styles: one ASCII-only, one more visually rich.
       - **Objective**: Design visual representation for each style.
       - **Test**: Provide examples of how each style would look.
       - **Proposed styles**:
