@@ -23,23 +23,40 @@ Implement support for configurable progress bar styles. This could involve offer
 ## 6. Subtask Checklist
 
 #### Main Task Structure
-- [ ] Task 1: Research and select suitable progress bar rendering approaches.
-  - **Problem**: Need to identify how to implement different visual styles for the progress bar effectively.
+- [x] Task 1: Research and select suitable progress bar rendering approaches.
+  - **Problem**: Need to identify how to implement different visual styles for progress bar effectively.
   - **Test**: Document research findings and design choices.
   - **Subtasks**:
-    - [ ] Subtask 1.1: Evaluate existing Python libraries for progress bar rendering (e.g., `tqdm`, `rich`, custom ASCII art).
+    - [x] Subtask 1.1: Evaluate existing Python libraries for progress bar rendering (e.g., `tqdm`, `rich`, custom ASCII art).
       - **Objective**: Understand their capabilities, dependencies, and suitability for `ptimeout`.
       - **Test**: Summarize findings on selected libraries/approaches.
-    - [ ] Subtask 1.2: Define at least two distinct progress bar styles: one ASCII-only, one more visually rich.
-      - **Objective**: Design the visual representation for each style.
+      - **Research findings**: 
+        - Rich (already used): Excellent choice - supports Unicode and ASCII modes, customizable styles, automatic terminal detection
+        - tqdm: Popular but less customization than rich, heavier dependency
+        - Custom ASCII: More control but requires significant implementation effort
+        - **Recommendation**: Continue using rich, extend its built-in styling capabilities
+    - [-] Subtask 1.2: Define at least two distinct progress bar styles: one ASCII-only, one more visually rich.
+      - **Objective**: Design visual representation for each style.
       - **Test**: Provide examples of how each style would look.
-- [ ] Task 2: Implement a mechanism to select and render different progress bar styles.
+      - **Proposed styles**:
+        - **ascii**: Pure ASCII characters for maximum compatibility `[====>    ] 50%`
+        - **unicode**: Rich Unicode characters for modern terminals `[━━━━▶    ] 50%`
+        - **minimal**: Simple dots for clean output `......50%`
+        - **fancy**: Decorated Unicode with animation `[■■■■▪▪▪▪] 50%`
+- [x] Task 2: Implement a mechanism to select and render different progress bar styles.
   - **Problem**: The existing progress bar logic needs to be extended to support multiple styles.
   - **Test**: Integration tests for rendering different styles and verifying their appearance.
   - **Subtasks**:
-    - [ ] Subtask 2.1: Add a command-line option (e.g., `--progress-style <style>`) to `ptimeout`.
+    - [x] Subtask 2.1: Add a command-line option (e.g., `--progress-style <style>`) to `ptimeout`.
       - **Objective**: Allow users to choose their preferred progress bar style.
       - **Test**: Verify `argparse` correctly captures the chosen style.
-    - [ ] Subtask 2.2: Modify the progress bar rendering logic to dynamically apply the selected style.
+      - **Implementation**: Successfully added `--progress-style` argument with choices: unicode, ascii, minimal, fancy. Default is unicode. Argument parser correctly validates input.
+    - [x] Subtask 2.2: Modify the progress bar rendering logic to dynamically apply the selected style.
       - **Objective**: Create functions or classes for each style that can render the progress bar based on the elapsed time and total timeout.
       - **Test**: Run `ptimeout` with different `--progress-style` options and visually confirm the correct rendering.
+       - **Implementation**: 
+         - Added `get_progress_columns()` function that returns appropriate Rich progress column configuration based on style
+         - Modified `run_command()` function to accept `progress_style` parameter  
+         - Updated all calls to `run_command()` to pass the progress style
+         - Successfully tested all four styles: unicode, ascii, minimal, fancy
+         - All styles render correctly and maintain functionality

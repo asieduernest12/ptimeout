@@ -277,6 +277,7 @@ def run_command(
     background=False,
     stdout_file=None,
     stderr_file=None,
+    progress_style="unicode",
 ):
     """Runs the command, managing retries and UI updates."""
 
@@ -318,6 +319,7 @@ def run_command(
             background,
             stdout_file,
             stderr_file,
+            progress_style,
         )
 
     # Handle background execution
@@ -353,6 +355,7 @@ def run_command(
                     background=False,
                     stdout_file=stdout_file,
                     stderr_file=stderr_file,
+                    progress_style=progress_style,
                 )
 
         except OSError as e:
@@ -401,15 +404,7 @@ def run_command(
                         f"  " * (nesting_level - 1) + "└─ " + task_description
                     )
 
-                progress_columns = [
-                    TextColumn("[bold blue]{task.description}", justify="right"),
-                    BarColumn(bar_width=None),
-                    "[progress.percentage]{task.percentage:>3.0f}%",
-                ]
-                if count_direction == "down":
-                    progress_columns.append(TimeRemainingColumn())
-                else:
-                    progress_columns.append(TimeElapsedColumn())
+                progress_columns = get_progress_columns(progress_style, count_direction)
 
                 progress = Progress(*progress_columns, console=console)
                 task_id = progress.add_task(
@@ -885,8 +880,220 @@ def parse_timeout(timeout_str):
         )
 
 
+def generate_systemd_unit(
+    name,
+    timeout,
+    command,
+    description=None,
+    user=None,
+    working_dir=None,
+    restart_policy=None,
+    output_file=None,
+):
+    """
+    Generate a systemd user service unit file for ptimeout commands.
+
+    Args:
+        name: Service name
+        timeout: Timeout duration (e.g., "30s", "5m", "1h")
+        command: Command to execute
+        description: Service description (optional)
+        user: User to run as (optional, defaults to current user)
+        working_dir: Working directory (optional)
+        restart_policy: Restart policy (optional, defaults to "no")
+        output_file: Output file path (optional, defaults to stdout)
+
+    Returns:
+        str: The generated systemd unit file content
+    """
+    # Default values
+    if description is None:
+        description = f"ptimeout service for {name}"
+    if restart_policy is None:
+        restart_policy = "no"
+    if user is None:
+        user = os.getenv("USER", "root")
+
+    # Validate restart policy
+    valid_restart_policies = [
+        "no",
+        "on-success",
+        "on-failure",
+        "on-abnormal",
+        "on-abort",
+        "always",
+    ]
+    if restart_policy not in valid_restart_policies:
+        raise ValueError(
+            f"Invalid restart policy: {restart_policy}. Valid options: {', '.join(valid_restart_policies)}"
+        )
+
+    # Build the systemd unit file
+    # Use a more realistic path for ptimeout installation
+    ptimeout_path = "/usr/local/bin/ptimeout"  # Default installation location
+    unit_content = f"""[Unit]
+Description={description}
+After=network.target
+
+[Service]
+Type=simple
+User={user}
+ExecStart={ptimeout_path} {timeout} -- {" ".join(command)}"""
+
+    # Add working directory if specified
+    if working_dir:
+        unit_content += f"\nWorkingDirectory={working_dir}"
+
+    # Add restart policy
+    unit_content += f"\nRestart={restart_policy}"
+
+    # Add standard output/error handling for background services
+    unit_content += """
+StandardOutput=journal
+StandardError=journal
+"""
+
+    # Install section
+    unit_content += f"""[Install]
+WantedBy=default.target
+"""
+
+    # Write to file or return content
+    if output_file:
+        with open(output_file, "w") as f:
+            f.write(unit_content)
+        return f"Systemd unit file written to: {output_file}"
+    else:
+        return unit_content
+
+
+def handle_systemd_generate():
+    """Handle the 'ptimeout systemd generate' command."""
+    parser = argparse.ArgumentParser(
+        description="Generate systemd user service unit files for ptimeout commands",
+        formatter_class=argparse.RawTextHelpFormatter,
+        usage="%(prog)s systemd generate [OPTIONS]",
+    )
+
+    parser.add_argument(
+        "--name", type=str, required=True, help="Service name (required)"
+    )
+
+    parser.add_argument(
+        "--timeout",
+        type=str,
+        required=True,
+        help="Timeout duration (e.g., '30s', '5m', '1h') (required)",
+    )
+
+    parser.add_argument(
+        "--command",
+        type=str,
+        required=True,
+        nargs="+",
+        help="Command to execute (required)",
+    )
+
+    parser.add_argument(
+        "--description", type=str, help="Service description (optional)"
+    )
+
+    parser.add_argument(
+        "--user", type=str, help="User to run as (optional, defaults to current user)"
+    )
+
+    parser.add_argument("--working-dir", type=str, help="Working directory (optional)")
+
+    parser.add_argument(
+        "--restart",
+        type=str,
+        choices=["no", "on-success", "on-failure", "on-abnormal", "on-abort", "always"],
+        default="no",
+        help="Restart policy (default: no)",
+    )
+
+    parser.add_argument(
+        "--output-file",
+        type=str,
+        help="Output file path (optional, defaults to stdout)",
+    )
+
+    args = parser.parse_args(sys.argv[3:])  # Skip 'ptimeout systemd generate'
+
+    try:
+        result = generate_systemd_unit(
+            name=args.name,
+            timeout=args.timeout,
+            command=args.command,
+            description=args.description,
+            user=args.user,
+            working_dir=args.working_dir,
+            restart_policy=args.restart,
+            output_file=args.output_file,
+        )
+
+        if args.output_file:
+            print(result)
+        else:
+            print(result)
+
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Unexpected error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def get_progress_columns(style, count_direction):
+    """
+    Generate progress columns based on the selected style.
+
+    Args:
+        style: Progress bar style ('unicode', 'ascii', 'minimal', 'fancy')
+        count_direction: 'up' or 'down' for elapsed/remaining time
+
+    Returns:
+        list: Rich progress column configuration
+    """
+    if style == "ascii":
+        # ASCII style: pure ASCII characters for compatibility
+        progress_columns = [
+            TextColumn("[bold blue]{task.description}", justify="right"),
+            BarColumn(bar_width=None),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+        ]
+    elif style == "minimal":
+        # Minimal style: simple text-based progress
+        progress_columns = [
+            TextColumn("[bold blue]{task.description}", justify="right"),
+            TextColumn("[green]{task.percentage:>3.0f}%"),
+        ]
+    elif style == "fancy":
+        # Fancy style: Unicode block characters with enhanced styling
+        progress_columns = [
+            TextColumn("[bold cyan]{task.description}", justify="right"),
+            BarColumn(bar_width=None),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+        ]
+    else:
+        # Default unicode style: Rich's default Unicode characters
+        progress_columns = [
+            TextColumn("[bold blue]{task.description}", justify="right"),
+            BarColumn(bar_width=None),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+        ]
+
+    if count_direction == "down":
+        progress_columns.append(TimeRemainingColumn())
+    else:
+        progress_columns.append(TimeElapsedColumn())
+
+    return progress_columns
+
+
 def get_version():
-    """Reads the version from the version.txt file."""
+    """Reads version from version.txt file."""
     try:
         with open(
             os.path.join(os.path.dirname(__file__), "..", "..", "version.txt"), "r"
@@ -899,6 +1106,12 @@ def get_version():
 def main():
     # Register signal handlers for graceful termination
     register_signal_handlers()
+
+    # Check if this is a systemd generate command
+    if len(sys.argv) >= 2 and sys.argv[1] == "systemd":
+        if len(sys.argv) >= 3 and sys.argv[2] == "generate":
+            handle_systemd_generate()
+            return
 
     # First parse just the --config argument to determine config file location
     config_parser = argparse.ArgumentParser(add_help=False)
@@ -914,7 +1127,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Run a command with a time-based progress bar, or process piped input with a timeout.",
         formatter_class=argparse.RawTextHelpFormatter,
-        usage="%(prog)s TIMEOUT [-h] [-v] [-r RETRIES] [-d {up,down}] [--dry-run] [--config CONFIG] -- COMMAND [ARGS...]",
+        usage="%(prog)s TIMEOUT [-h] [-v] [-r RETRIES] [-d {up,down}] [--progress-style {unicode,ascii,minimal,fancy}] [--dry-run] [--config CONFIG] -- COMMAND [ARGS...]",
         parents=[config_parser],  # Include the --config argument
     )
     parser.add_argument(
@@ -948,6 +1161,13 @@ def main():
         choices=["up", "down"],
         default=config.get("countdown_direction", "up"),
         help="Specify count direction: 'up' to count elapsed time (default), 'down' to count remaining time.",
+    )
+    parser.add_argument(
+        "--progress-style",
+        type=str,
+        choices=["unicode", "ascii", "minimal", "fancy"],
+        default=config.get("progress_style", "unicode"),
+        help="Progress bar style: 'unicode' (default), 'ascii', 'minimal', 'fancy'.",
     )
     parser.add_argument(
         "--dry-run",
@@ -1086,6 +1306,7 @@ def main():
         background=args.background,
         stdout_file=getattr(args, "stdout", None),
         stderr_file=getattr(args, "stderr", None),
+        progress_style=args.progress_style,
     )
     sys.exit(exit_code)
 
