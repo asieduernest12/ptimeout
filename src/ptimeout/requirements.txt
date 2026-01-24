@@ -1,2 +1,3 @@
 rich
 watchdog
+click
