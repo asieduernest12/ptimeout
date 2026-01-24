@@ -7,10 +7,10 @@ While argument parsing for nested commands is being implemented (as per ticket-0
 Implement comprehensive argument validation for both outer and nested `ptimeout` commands. This includes checking for valid timeout formats, ensuring command separators (`--`) are used correctly, and validating other `ptimeout` specific arguments.
 
 ## 3. Acceptance Criteria
-- [ ] AC 1.1: Invalid timeout formats (e.g., "10x", "5s-") should result in a clear error message.
-- [ ] AC 1.2: Missing command separators in nested `ptimeout` calls should be detected and reported.
-- [ ] AC 1.3: Other `ptimeout` arguments (e.g., retries, countdown direction) should be validated for correct types and ranges.
-- [ ] AC 1.4: Validation errors should be user-friendly and suggest correct usage.
+- [x] AC 1.1: Invalid timeout formats (e.g., "10x", "5s-") should result in a clear error message.
+- [x] AC 1.2: Missing command separators in nested `ptimeout` calls should be detected and reported.
+- [x] AC 1.3: Other `ptimeout` arguments (e.g., retries, countdown direction) should be validated for correct types and ranges.
+- [x] AC 1.4: Validation errors should be user-friendly and suggest correct usage.
 
 ## 4. Technical Considerations
 - **Argument Parsing**: Integrate validation checks within the existing `argparse` setup or enhance the custom parsing logic.
