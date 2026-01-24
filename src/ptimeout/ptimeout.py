@@ -274,6 +274,9 @@ def run_command(
     piped_stdin_data=None,
     verbose=False,
     nesting_level=0,
+    background=False,
+    stdout_file=None,
+    stderr_file=None,
 ):
     """Runs the command, managing retries and UI updates."""
 
@@ -312,7 +315,49 @@ def run_command(
             piped_stdin_data,
             verbose,
             nesting_level + 1,
+            background,
+            stdout_file,
+            stderr_file,
         )
+
+    # Handle background execution
+    if background and nesting_level == 0:
+        # For background mode, we need to fork the process and run the command in the background
+        try:
+            # Fork the current process
+            pid = os.fork()
+
+            if pid > 0:
+                # Parent process: print the child PID and exit
+                print(pid)
+                return EXIT_SUCCESS
+            else:
+                # Child process: detach from terminal and continue execution
+                # Create new session to detach from controlling terminal
+                os.setsid()
+
+                # Redirect stdin/stdout/stderr to /dev/null to detach completely
+                with open(os.devnull, "r") as devnull:
+                    os.dup2(devnull.fileno(), sys.stdin.fileno())
+
+                # Continue with normal execution in the detached process
+                # Set background to False to avoid infinite recursion
+                return run_command(
+                    command_args,
+                    timeout,
+                    retries,
+                    count_direction,
+                    piped_stdin_data,
+                    verbose,
+                    nesting_level,
+                    background=False,
+                    stdout_file=stdout_file,
+                    stderr_file=stderr_file,
+                )
+
+        except OSError as e:
+            console.print(f"[red]Failed to create background process: {e}")
+            return EXIT_PTIMEOUT_ERROR
 
     if verbose:
         indent = "  " * nesting_level
@@ -413,12 +458,25 @@ def run_command(
                     final_exit_code = EXIT_PTIMEOUT_ERROR
                     break  # Exit retry loop
 
+                stdout_handle = None
+                stderr_handle = None
                 try:
+                    # Handle output redirection
+                    if stdout_file:
+                        stdout_handle = open(stdout_file, "w")
+                    else:
+                        stdout_handle = subprocess.PIPE
+
+                    if stderr_file:
+                        stderr_handle = open(stderr_file, "w")
+                    else:
+                        stderr_handle = subprocess.PIPE
+
                     proc = subprocess.Popen(
                         command_args,
                         stdin=subprocess.PIPE if piped_stdin_data else None,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
+                        stdout=stdout_handle,
+                        stderr=stderr_handle,
                         preexec_fn=os.setsid,  # To kill the whole process group
                     )
 
@@ -461,19 +519,24 @@ def run_command(
                     )
                     stdin_feeder_thread.start()
 
-                # Queues and threads to read stdout and stderr
+                # Queues and threads to read stdout and stderr only when using pipes
                 q_stdout = queue.Queue()
                 q_stderr = queue.Queue()
+                t_stdout = None
+                t_stderr = None
 
-                t_stdout = threading.Thread(
-                    target=read_stream, args=(proc.stdout, q_stdout)
-                )
-                t_stderr = threading.Thread(
-                    target=read_stream, args=(proc.stderr, q_stderr)
-                )
+                # Only create reader threads when output goes to pipes (not files)
+                if not stdout_file:
+                    t_stdout = threading.Thread(
+                        target=read_stream, args=(proc.stdout, q_stdout)
+                    )
+                    t_stdout.start()
 
-                t_stdout.start()
-                t_stderr.start()
+                if not stderr_file:
+                    t_stderr = threading.Thread(
+                        target=read_stream, args=(proc.stderr, q_stderr)
+                    )
+                    t_stderr.start()
 
                 start_time = time.time()
 
@@ -509,25 +572,27 @@ def run_command(
                         )
                         last_verbose_update = elapsed
 
-                    # Non-blocking read from queues
-                    while not q_stdout.empty():
-                        line = q_stdout.get()
-                        if is_interactive:
-                            line_buffer.append(
-                                Text(line, style="none")
-                            )  # Store as rich Text
-                        else:
-                            sys.stdout.write(line)
-                            sys.stdout.flush()
-                    while not q_stderr.empty():
-                        line = q_stderr.get()
-                        if is_interactive:
-                            line_buffer.append(
-                                Text(line, style="red")
-                            )  # Store as rich Text
-                        else:
-                            sys.stderr.write(line)
-                            sys.stderr.flush()
+                    # Non-blocking read from queues (only when using pipes)
+                    if t_stdout:
+                        while not q_stdout.empty():
+                            line = q_stdout.get()
+                            if is_interactive:
+                                line_buffer.append(
+                                    Text(line, style="none")
+                                )  # Store as rich Text
+                            else:
+                                sys.stdout.write(line)
+                                sys.stdout.flush()
+                    if t_stderr:
+                        while not q_stderr.empty():
+                            line = q_stderr.get()
+                            if is_interactive:
+                                line_buffer.append(
+                                    Text(line, style="red")
+                                )  # Store as rich Text
+                            else:
+                                sys.stderr.write(line)
+                                sys.stderr.flush()
 
                     if is_interactive:
                         # Reconstruct output_text from buffer for scrolling effect
@@ -548,25 +613,29 @@ def run_command(
                 if stdin_feeder_thread:
                     stdin_feeder_thread.join(timeout=0.5)
 
-                # After loop, join stdout/stderr threads
-                t_stdout.join(timeout=0.5)
-                t_stderr.join(timeout=0.5)
+                # After loop, join stdout/stderr threads (only if they exist)
+                if t_stdout:
+                    t_stdout.join(timeout=0.5)
+                if t_stderr:
+                    t_stderr.join(timeout=0.5)
 
-                # Final drain of queues
-                while not q_stdout.empty():
-                    line = q_stdout.get()
-                    if is_interactive:
-                        line_buffer.append(Text(line, style="none"))
-                    else:
-                        sys.stdout.write(line)
-                        sys.stdout.flush()
-                while not q_stderr.empty():
-                    line = q_stderr.get()
-                    if is_interactive:
-                        line_buffer.append(Text(line, style="red"))
-                    else:
-                        sys.stderr.write(line)
-                        sys.stderr.flush()
+                # Final drain of queues (only when using pipes)
+                if t_stdout:
+                    while not q_stdout.empty():
+                        line = q_stdout.get()
+                        if is_interactive:
+                            line_buffer.append(Text(line, style="none"))
+                        else:
+                            sys.stdout.write(line)
+                            sys.stdout.flush()
+                if t_stderr:
+                    while not q_stderr.empty():
+                        line = q_stderr.get()
+                        if is_interactive:
+                            line_buffer.append(Text(line, style="red"))
+                        else:
+                            sys.stderr.write(line)
+                            sys.stderr.flush()
 
                 if is_interactive:
                     display_text = Text()
@@ -659,6 +728,12 @@ def run_command(
         finally:
             # Clear global subprocess reference
             current_subprocess = None
+
+            # Close file handles if they were opened
+            if stdout_handle and hasattr(stdout_handle, "close"):
+                stdout_handle.close()
+            if stderr_handle and hasattr(stderr_handle, "close"):
+                stderr_handle.close()
 
     # print(f"DEBUG: Final final_exit_code before return from run_command: {final_exit_code}", file=sys.stderr) # DEBUG
     return final_exit_code
@@ -887,6 +962,16 @@ def main():
         default=False,
         help="Run the command in the background and print the process ID.",
     )
+    parser.add_argument(
+        "--stdout",
+        type=str,
+        help="Redirect stdout to the specified file (useful with --background).",
+    )
+    parser.add_argument(
+        "--stderr",
+        type=str,
+        help="Redirect stderr to the specified file (useful with --background).",
+    )
 
     parser.add_argument(
         "command",
@@ -998,6 +1083,9 @@ def main():
         args.count_direction,
         piped_stdin_data,
         args.verbose,
+        background=args.background,
+        stdout_file=getattr(args, "stdout", None),
+        stderr_file=getattr(args, "stderr", None),
     )
     sys.exit(exit_code)
 
