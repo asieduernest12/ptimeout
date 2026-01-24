@@ -658,29 +658,29 @@ def run_command(
                         for buffered_line in buffer_to_use:
                             display_text.append(buffered_line)
 
-                    # Update title to indicate scrolling mode
-                    title = f"Output (Attempt {attempt + 1})"
-                    if scrolling_enabled:
-                        title += f" [Scrolling: {len(line_buffer_full)} lines]"
+                        # Update title to indicate scrolling mode
+                        title = f"Output (Attempt {attempt + 1})"
+                        if scrolling_enabled:
+                            title += f" [Scrolling: {len(line_buffer_full)} lines]"
 
-                        # Add scrolling instructions
-                        if len(line_buffer_full) > MAX_DISPLAY_LINES:
-                            help_text = Text(
-                                "\n[dim yellow]Scroll mode enabled:[/dim yellow]\n"
-                                "- Full output saved to buffer (25 lines shown)[/dim yellow]\n"
-                                "- Press Ctrl+C to exit and view full output in terminal[/dim yellow]\n"
-                                "- Consider redirecting output to file: ptimeout --output file.log[/dim yellow]",
-                                style="dim yellow",
+                            # Add scrolling instructions
+                            if len(line_buffer_full) > MAX_DISPLAY_LINES:
+                                help_text = Text(
+                                    "\n[dim yellow]Scroll mode enabled:[/dim yellow]\n"
+                                    "- Full output saved to buffer (25 lines shown)[/dim yellow]\n"
+                                    "- Press Ctrl+C to exit and view full output in terminal[/dim yellow]\n"
+                                    "- Consider redirecting output to file: ptimeout --output file.log[/dim yellow]",
+                                    style="dim yellow",
+                                )
+                                display_text.append(help_text)
+
+                        layout["main"].update(
+                            Panel(
+                                display_text,
+                                border_style="blue" if scrolling_enabled else "green",
+                                title=title,
                             )
-                            display_text.append(help_text)
-
-                    layout["main"].update(
-                        Panel(
-                            display_text,
-                            border_style="blue" if scrolling_enabled else "green",
-                            title=title,
                         )
-                    )
 
                     time.sleep(0.05)  # UI refresh rate for interactive mode
 

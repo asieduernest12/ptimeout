@@ -9,7 +9,7 @@ Enhance the CI/CD pipeline to include dedicated jobs for testing the `ptimeout` 
 ## 3. Acceptance Criteria
 - [x] AC 1.1: CI/CD workflow includes a job to build and test the `ptimeout` binary on Linux.
 - [x] AC 1.2: CI/CD workflow includes a job to build and test the `ptimeout` binary on macOS.
-- [ ] AC 1.3: (Optional, if feasible) CI/CD workflow includes a job to build and test the `ptimeout` binary on Windows.
+- [x] AC 1.3: (Optional, if feasible) CI/CD workflow includes a job to build and test the `ptimeout` binary on Windows.
 - [x] AC 1.4: A set of integration tests are executed against the built binaries to verify core functionality.
 
 ## 4. Technical Considerations

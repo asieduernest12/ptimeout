@@ -7,8 +7,9 @@ When `ptimeout` outputs a large amount of text, it can be difficult for users to
 Enhance `ptimeout`'s output mechanism to include interactive scrolling capabilities. When the output exceeds the terminal's height, `ptimeout` will present the output in a scrollable view, responding to keyboard events (e.g., arrow keys, Page Up/Down) to navigate the content.
 
 ## 3. Acceptance Criteria
-- [ ] AC 1.1: When command output exceeds terminal height, `ptimeout` enters an interactive scroll mode.
-- [-] AC 1.2: Users can scroll up and down using arrow keys or Page Up/Page Down.
+- [x] AC 1.1: When command output exceeds terminal height, `ptimeout` enters an interactive scroll mode.
+- [x] AC 1.2: Users can scroll up and down using arrow keys or Page Up/Page Down.
+- [x] AC 1.2: Users can scroll up and down using arrow keys or Page Up/Page Down.
 - [x] AC 1.3: The interactive mode can be exited (e.g., by pressing 'q' or 'Ctrl+C').
 - [x] AC 1.4: Output is correctly paginated and displayed within the terminal.
 

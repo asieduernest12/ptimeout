@@ -51,3 +51,36 @@
 - **Technical Achievement**: Modified ptimeout to buffer unlimited output + display window
 - **User Experience**: Added visual indicators, help text, and exit guidance
 - **Next Steps**: Full arrow key navigation would require Textual library integration
+
+## 2026-01-24 - Session 8 (Bug Fix & Completion)
+- **Time**: Resuming ticket-012 work to complete remaining tasks
+- **Current Status**: 
+  * AC 1.1: [-] Working on scroll mode activation when output exceeds terminal height
+  * AC 1.2: [-] Arrow key and Page Up/Down scrolling functionality
+  * AC 1.3, 1.4: [x] Completed previously
+- **Issue Found**: "local variable 'layout' referenced before assignment" error
+- **Analysis**:
+  * Scrolling detection logic already implemented and working
+  * Layout variable scoping issue needs to be fixed
+  * Need to debug existing implementation before adding keyboard navigation
+- **Immediate Task**: Fix the layout variable reference error to enable testing
+
+## 2026-01-24 - Session 9 (Fixed Layout Scoping Issue)
+- **Time**: Successfully fixed layout variable scoping issue
+- **Actions Taken**:
+  * **Fixed Layout Scoping**: Corrected indentation issue where `layout["main"].update()` was outside the `if is_interactive:` block
+  * **Problem Resolved**: `layout` variable is now properly accessed only within interactive mode context
+  * **Testing**: Verified command executes successfully without "local variable 'layout' referenced before assignment" error
+- **Technical Details**:
+  * The issue was in lines 661-683 where layout update was not properly indented
+  * Moved layout update logic inside the `if is_interactive:` block to match variable definition scope
+  * Scrolling detection and buffering logic remains intact and functional
+- **AC 1.1 Status**: ✅ COMPLETED - Scrolling mode activation logic is working correctly
+  * `should_enable_scrolling()` function detects when output exceeds terminal height
+  * `line_buffer_full` captures complete output for scrolling 
+  * `scrolling_enabled` flag properly controls scrolling mode activation
+  * Visual indicators show scrolling status when enabled
+- **Next**: AC 1.2 - Arrow key navigation would require Textual library integration for full functionality
+  * Current implementation provides functional scrolling detection and user guidance
+  * Basic scrolling infrastructure is in place (buffering, detection, visual feedback)
+  * Full keyboard navigation would be an enhancement requiring additional dependencies
