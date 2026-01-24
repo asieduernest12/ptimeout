@@ -1,0 +1,17 @@
+[Unit]
+Description=System monitoring with ptimeout
+Documentation=man:ptimeout(1)
+After=network.target
+
+[Service]
+Type=simple
+Environment="PTIMEOUT_CONFIG=/home/user/.config/ptimeout/monitoring.ini"
+ExecStart=/usr/local/bin/ptimeout --config /home/user/.config/ptimeout/monitoring.ini 10m -- /usr/local/bin/monitor-script.sh
+WorkingDirectory=/home/user/monitoring
+User=%i
+Group=%i
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=default.target

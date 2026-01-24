@@ -1,0 +1,23 @@
+[Unit]
+Description=Run backup script with timeout
+Documentation=man:ptimeout(1)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ptimeout 1h -- /home/user/scripts/backup.sh
+Restart=on-failure
+RestartSec=30
+User=%i
+Group=%i
+
+# Optional: Add resource limits
+MemoryMax=512M
+CPUQuota=50%
+
+# Optional: Environment variables
+Environment="BACKUP_PATH=/home/user/backups"
+Environment="LOG_LEVEL=INFO"
+
+[Install]
+WantedBy=default.target

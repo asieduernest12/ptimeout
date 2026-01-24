@@ -23,14 +23,14 @@ Provide documentation and example `systemd` user service unit files that demonst
 ## 6. Subtask Checklist
 
 #### Main Task Structure
-- [ ] Task 1: Create comprehensive documentation for `systemd` user service integration.
+- [x] Task 1: Create comprehensive documentation for `systemd` user service integration.
   - **Problem**: Users need clear instructions and examples to integrate `ptimeout` with `systemd`.
   - **Test**: Review documentation for clarity, completeness, and accuracy.
   - **Subtasks**:
-    - [ ] Subtask 1.1: Draft a new section in the `README.md` or a dedicated `docs/systemd.md` file.
+    - [x] Subtask 1.1: Draft a new section in the `README.md` or a dedicated `docs/systemd.md` file.
       - **Objective**: Outline the steps for creating, enabling, and managing `systemd` user services.
       - **Test**: Ensure the documentation covers all essential `systemd` commands (`systemctl --user enable/start/stop/status`).
-    - [ ] Subtask 1.2: Include at least two practical example `.service` files.
+    - [x] Subtask 1.2: Include at least two practical example `.service` files.
       - **Objective**: Provide ready-to-use examples for common scenarios, e.g., running a script with a timeout, or a piped command.
       - **Test**: Validate that the example `.service` files are syntactically correct and functional.
 - [ ] Task 2: (Optional) Develop a helper utility to generate `systemd` unit files.

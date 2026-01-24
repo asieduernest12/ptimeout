@@ -1,0 +1,26 @@
+[Unit]
+Description=Process data with timeout and logging
+Documentation=man:ptimeout(1)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ptimeout 30m -- python /home/user/data_processor.py
+StandardOutput=append:/home/user/logs/data-processor.log
+StandardError=append:/home/user/logs/data-processor-error.log
+Restart=on-failure
+RestartSec=60
+User=%i
+Group=%i
+
+# Resource limits for data processing
+MemoryMax=2G
+CPUQuota=80%
+
+# Environment for data processing
+Environment="DATA_PATH=/home/user/data"
+Environment="OUTPUT_PATH=/home/user/processed"
+Environment="PYTHONPATH=/home/user/lib"
+
+[Install]
+WantedBy=default.target

@@ -11,6 +11,10 @@ A robust command-line utility designed to execute other commands with a predefin
 - [Usage](#usage)
   - [Running a Command with a Timeout](#running-a-command-with-a-timeout)
   - [Processing Piped Input with a Timeout](#processing-piped-input-with-a-timeout)
+- [Systemd Integration](#systemd-integration)
+  - [Creating User Services](#creating-user-services)
+  - [Example Service Files](#example-service-files)
+  - [Managing Services](#managing-services)
 - [Demo](#demo)
 - [License](#license)
 - [Contact](#contact)
@@ -147,6 +151,149 @@ cat FILE | ptimeout TIMEOUT [-h] [-v] [--version] [-r RETRIES] [-d {up,down}] [-
     ```bash
     echo "hello world" | ptimeout 3s
     ```
+
+## Systemd Integration
+
+`ptimeout` can be integrated with systemd user services to enable persistent execution of commands across reboots and provide robust service management capabilities.
+
+### Creating User Services
+
+To create a systemd user service for `ptimeout`:
+
+1. **Create the service directory** (if it doesn't exist):
+    ```bash
+    mkdir -p ~/.config/systemd/user/
+    ```
+
+2. **Create a service file** with a `.service` extension in the user service directory.
+
+3. **Reload the systemd daemon** to recognize the new service:
+    ```bash
+    systemctl --user daemon-reload
+    ```
+
+4. **Enable and start** the service:
+    ```bash
+    systemctl --user enable your-service-name.service
+    systemctl --user start your-service-name.service
+    ```
+
+### Example Service Files
+
+#### Basic Service Example
+
+Create a file `~/.config/systemd/user/backup-timeout.service`:
+
+```ini
+[Unit]
+Description=Run backup script with timeout
+Documentation=man:ptimeout(1)
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ptimeout 1h -- /home/user/scripts/backup.sh
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target
+```
+
+#### Service with Output Logging
+
+Create a file `~/.config/systemd/user/data-processor.service`:
+
+```ini
+[Unit]
+Description=Process data with timeout and logging
+Documentation=man:ptimeout(1)
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ptimeout 30m -- python /home/user/data_processor.py
+StandardOutput=append:/home/user/logs/data-processor.log
+StandardError=append:/home/user/logs/data-processor-error.log
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=default.target
+```
+
+#### Service with Custom Configuration
+
+Create a file `~/.config/systemd/user/monitoring.service`:
+
+```ini
+[Unit]
+Description=System monitoring with ptimeout
+Documentation=man:ptimeout(1)
+
+[Service]
+Type=simple
+Environment="PTIMEOUT_CONFIG=/home/user/.config/ptimeout/monitoring.ini"
+ExecStart=/usr/local/bin/ptimeout --config /home/user/.config/ptimeout/monitoring.ini 10m -- /usr/local/bin/monitor-script.sh
+WorkingDirectory=/home/user/monitoring
+User=%i
+Group=%i
+
+[Install]
+WantedBy=default.target
+```
+
+### Managing Services
+
+#### Basic Service Commands
+
+```bash
+# Check service status
+systemctl --user status your-service-name.service
+
+# View service logs
+journalctl --user -u your-service-name.service -f
+
+# Stop a service
+systemctl --user stop your-service-name.service
+
+# Restart a service
+systemctl --user restart your-service-name.service
+
+# Disable a service (prevent auto-start on boot)
+systemctl --user disable your-service-name.service
+```
+
+#### Advanced Service Management
+
+```bash
+# View all user services
+systemctl --user list-units --type=service
+
+# Check service logs from last boot
+journalctl --user -u your-service-name.service --since "1 day ago"
+
+# View service configuration
+systemctl --user cat your-service-name.service
+
+# Check for service errors
+journalctl --user -p err -u your-service-name.service
+```
+
+#### Service File Validation
+
+```bash
+# Validate service file syntax
+systemctl --user daemon-reload
+
+# Test service file before starting
+systemctl --user start your-service-name.service --dry-run
+```
+
+### Security Considerations
+
+- **User Services**: These examples use systemd user services, which run with user privileges and don't require root access.
+- **File Permissions**: Ensure service files have appropriate permissions (600 or 644).
+- **Path Security**: Use absolute paths in `ExecStart` directives to avoid PATH manipulation issues.
+- **Resource Limits**: Consider adding `MemoryLimit`, `CPUQuota`, and other resource limits for resource-intensive services.
 
 ## Demo
 
