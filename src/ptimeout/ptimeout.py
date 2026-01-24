@@ -880,6 +880,13 @@ def main():
         default=False,
         help="Print the command that would be executed without actually running it.",
     )
+    parser.add_argument(
+        "-b",
+        "--background",
+        action="store_true",
+        default=False,
+        help="Run the command in the background and print the process ID.",
+    )
 
     parser.add_argument(
         "command",
