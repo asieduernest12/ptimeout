@@ -7,10 +7,10 @@ Running `ptimeout` commands persistently across reboots or managing them as syst
 Provide documentation and example `systemd` user service unit files that demonstrate how to run `ptimeout` commands as persistent services. This might also involve adding a helper utility to simplify the creation and management of these services.
 
 ## 3. Acceptance Criteria
-- [ ] AC 1.1: Provide clear documentation on how to create and manage `systemd` user services for `ptimeout` commands.
-- [ ] AC 1.2: Include example `.service` files for common `ptimeout` use cases.
-- [ ] AC 1.3: The documentation explains how to enable, start, stop, and check the status of these services.
-- [ ] AC 1.4: (Optional) Develop a simple helper script or command within `ptimeout` to generate `systemd` unit files.
+- [x] AC 1.1: Provide clear documentation on how to create and manage `systemd` user services for `ptimeout` commands.
+- [x] AC 1.2: Include example `.service` files for common `ptimeout` use cases.
+- [x] AC 1.3: The documentation explains how to enable, start, stop, and check the status of these services.
+- [x] AC 1.4: (Optional) Develop a simple helper script or command within `ptimeout` to generate `systemd` unit files.
 
 ## 4. Technical Considerations
 - **systemd Unit File Structure**: Understand the syntax and best practices for `.service` files.
