@@ -62,7 +62,7 @@ Refactor the existing `argparse`-based command-line interface to use the `click`
     -     [x] Subtask 2.2: Migrate the existing command execution logic to be compatible with `click`'s context management.
       - **Objective**: Adapt the `run_command_with_timeout` function to receive arguments from `click`'s parsing.
       - **Test**: Run basic `ptimeout` commands (e.g., `ptimeout 5s -- ls`) and confirm they execute correctly.
-- [ ] Task 3: Integrate nested `ptimeout` command parsing with `click` subcommands.
+- [x] Task 3: Integrate nested `ptimeout` command parsing with `click` subcommands.
   - **Problem**: The unique challenge of `ptimeout` is handling itself as a subcommand.
   - **Test**: Integration tests for nested `ptimeout` calls, ensuring `click` correctly parses and dispatches them.
   - **Subtasks**:
@@ -73,7 +73,7 @@ Refactor the existing `argparse`-based command-line interface to use the `click`
         - Fixed command extraction logic for nested commands
         - Skipped separator validation for nested commands (handled at execution time)
         - Successfully tested with multiple scenarios: basic nested, verbose mode, timeout scenarios
-    - [-] Subtask 3.2: Update the `ptimeout` execution logic to recursively invoke `click` for nested commands.
+    - [x] Subtask 3.2: Update the `ptimeout` execution logic to recursively invoke `click` for nested commands.
       - **Objective**: When a nested `ptimeout` is detected, use `click`'s internal mechanisms to parse and execute the inner command.
       - **Test**: Run complex nested `ptimeout` commands and verify their correct execution through the `click` interface.
-      - **Progress**: Implementation complete - nested commands execute correctly through click interface.
+      - **Progress**: COMPLETED - Nested commands execute correctly through click interface, all scenarios tested successfully.
