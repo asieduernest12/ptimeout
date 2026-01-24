@@ -134,6 +134,8 @@ def signal_handler(signum, frame):
             # Kill the entire process group to ensure all children are terminated
             os.killpg(os.getpgid(current_subprocess.pid), signal.SIGTERM)
             # Give it a moment to terminate gracefully
+            import time
+
             time.sleep(0.1)
             # If still running, force kill
             if current_subprocess.poll() is None:
@@ -649,17 +651,17 @@ def run_command(
                 ):  # Process still running, timeout was truly reached
                     timed_out_by_ptimeout = True  # Set the flag
                     os.killpg(os.getpgid(proc.pid), 9)
-                proc.wait()  # Clean up zombie process
-                live.stop()  # Explicitly stop Live
-                if verbose:
-                    indent = "  " * nesting_level
-                    console.print(
-                        f"{indent}[red]✗ Timeout reached ({timeout}s) - command terminated (level {nesting_level})."
-                    )
-                else:
-                    console.print(
-                        f"[bold red]Timeout of {timeout}s reached. Command terminated."
-                    )
+                    proc.wait()  # Clean up zombie process
+                    live.stop()  # Explicitly stop Live
+                    if verbose:
+                        indent = "  " * nesting_level
+                        console.print(
+                            f"{indent}[red]✗ Timeout reached ({timeout}s) - command terminated (level {nesting_level})."
+                        )
+                    else:
+                        console.print(
+                            f"[bold red]Timeout of {timeout}s reached. Command terminated."
+                        )
 
                 if timed_out_by_ptimeout:
                     if attempt >= retries:
@@ -709,16 +711,8 @@ def run_command(
                             continue  # Go to next retry
 
         except (Exception, KeyboardInterrupt) as e:
-            try:
-                if proc and proc.poll() is None:
-                    os.killpg(os.getpgid(proc.pid), 9)
-            except (ProcessLookupError, OSError):
-                # Process might have already terminated
-                pass
-            except Exception as kill_error:
-                # Catch any other process-related errors and ignore them
-                # since we're in cleanup/exception handling anyway
-                pass
+            if proc and proc.poll() is None:
+                os.killpg(os.getpgid(proc.pid), 9)
             if isinstance(e, KeyboardInterrupt):
                 console.print("\n[yellow]Interrupted by user.")
                 final_exit_code = EXIT_INTERRUPTED  # Interrupted by user (Ctrl+C)
@@ -1368,3 +1362,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+# Watch test comment
+# Watch test comment at Sat 24 Jan 2026 12:30:27 AM EST

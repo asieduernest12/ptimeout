@@ -1,4 +1,4 @@
-.PHONY: all install install-host uninstall uninstall-host build-binary clean docker-clean-venv run test help docker-setup
+.PHONY: all install install-host uninstall uninstall-host build-binary clean docker-clean-venv run test dev-watch help docker-setup
 
 # Variables
 PTIMEOUT_MODULE_DIR := src/ptimeout
@@ -69,6 +69,11 @@ test:
 	@echo "Running tests with Docker Compose..."
 	docker compose run test
 
+# Run development container with file watching enabled
+dev-watch:
+	@echo "Starting development container with file watching..."
+	docker compose up --watch dev
+
 .PHONY: install-into-running-container
 
 # Variables
@@ -134,5 +139,6 @@ help:
 	@echo "  make clean                      - Removes local build artifacts."
 	@echo "  make run                        - Runs ptimeout in development mode (local python)."
 	@echo "  make test                       - Runs tests using Docker Compose."
+	@echo "  make dev-watch                  - Starts development container with auto-rebuild on file changes."
 	@echo "  make docker-setup               - Checks Docker dependencies and builds images."
 	@echo "  make help                       - Displays this help message."

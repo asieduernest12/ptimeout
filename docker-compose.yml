@@ -2,22 +2,11 @@
 services:
   dev:
     build: .
-    develop:
-      watch:
-        - action: sync
-          path: ./src/ptimeout
-          target: /app/src/ptimeout
-          initial_sync: true
-          ignore:
-            - __pycache__/
-            - *.pyc
-            - .pytest_cache/
-            - dist/
-            - build/
-        - action: rebuild
-          path: ./src/ptimeout/requirements.txt
+    environment:
+      - WATCHER_RESTART_DELAY=1.0
     volumes:
-      - .:/app
+      - ./src:/app/src
+      - ./scripts:/app/scripts
       - ./ptimeout/dist:/app/ptimeout/dist
   
   test:

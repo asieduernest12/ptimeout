@@ -101,20 +101,33 @@ The project uses Docker Compose to set up a consistent development and testing e
 
 #### Development Container Usage
 
-1.  **Access the development container:**
-    To start developing, run the `dev` service with `docker compose run --rm dev bash`. This command mounts your local project directory into the container, allowing for live code changes without needing to rebuild the image constantly.
+1.  **Build Docker images:**
     First, ensure your Docker images are up-to-date. This command builds the `dev` and `test` service images based on the `Dockerfile`.
     ```bash
     docker compose build
     ```
 
-2.  **Execute commands within the container:**
-    Use the `docker compose run --rm dev bash` command to access the container shell. From there, you can run Python scripts, make changes, and perform other development tasks.
-    To actively develop, you can run the `dev` service, which mounts your local project directory into the container. This allows for live code changes without needing to rebuild the image constantly.
+2.  **Auto-watch development mode (Recommended):**
+    For the best development experience, use the built-in file watching to automatically sync changes and rebuild when needed:
+    ```bash
+    # Using Docker Compose directly
+    docker compose up --watch dev
+    
+    # Or via Makefile
+    make dev-watch
+    ```
+    This mode will:
+    - **Sync Python source files instantly** when you save them (no rebuild needed)
+    - **Rebuild automatically** when `requirements.txt` changes
+    - **Ignore unnecessary files** like `__pycache__`, `*.pyc`, build artifacts
+    - Provide fast feedback loops for development
+
+3.  **Manual development container access:**
+    For traditional container access, use the `dev` service with a shell:
     ```bash
     docker compose run --rm dev bash
     ```
-    The `--rm` flag ensures the container is removed after you exit, keeping your system clean. You will get a shell inside the container where you can run Python scripts, make changes, etc.
+    This mounts your local project directory into the container, allowing for live code changes. The `--rm` flag ensures the container is removed after you exit.
 
 3.  **Building the standalone binary:**
     While `scripts/build_binary.sh` handles building the standalone executable on the host, you can also perform build steps within the Docker `dev` container if needed, ensuring a consistent build environment:

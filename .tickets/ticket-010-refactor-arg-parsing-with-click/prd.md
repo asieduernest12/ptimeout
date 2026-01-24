@@ -27,20 +27,39 @@ Refactor the existing `argparse`-based command-line interface to use the `click`
   - **Problem**: Need to understand how `click` can replace `argparse` effectively, especially for nested commands.
   - **Test**: Document `click`'s features and suitability.
   - **Subtasks**:
-    - [ ] Subtask 1.1: Review `click`'s documentation on basic argument parsing, options, and subcommands.
+    - [x] Subtask 1.1: Review `click`'s documentation on basic argument parsing, options, and subcommands.
       - **Objective**: Understand `click`'s core API and best practices.
       - **Test**: Summarize key `click` concepts relevant to `ptimeout`.
-    - [ ] Subtask 1.2: Investigate how `click` handles nested command structures, similar to `ptimeout`'s nested invocations.
+      - **Research findings**:
+        - Click provides decorators (@click.command, @click.option, @click.group) for declarative CLI structure
+        - Automatic help generation with rich formatting support
+        - Native subcommand support with proper context management
+        - Better error handling and parameter validation
+        - Support for config files and environment variables through contexts
+        - Backward compatibility maintained through careful API design
+        - Key functions: click.command(), click.option(), click.argument(), click.group()
+        - Context system enables nested command handling and parameter source tracking
+    - [x] Subtask 1.2: Investigate how `click` handles nested command structures, similar to `ptimeout`'s nested invocations.
       - **Objective**: Determine the most idiomatic way to implement nested `ptimeout` parsing with `click`.
       - **Test**: Outline a high-level design for `ptimeout`'s `click` command structure.
-- [ ] Task 2: Migrate `ptimeout`'s main command and arguments to `click`.
+      - **Research findings**:
+        - Click supports nested commands through @click.group() and @click.command() decorators
+        - Context system enables proper command isolation and parameter passing
+        - Multiple approaches for nested commands:
+          1. Subcommand groups: @click.group() with @group.command()
+          2. Command chaining: Recursive calls with context management
+          3. Custom command classes: For complex command structures
+        - For ptimeout nested calls: Use click's invoke() method for recursive execution
+        - Context sharing allows parameters to flow between nested levels
+        - Error handling and help generation work automatically across levels
+- [-] Task 2: Migrate `ptimeout`'s main command and arguments to `click`.
   - **Problem**: The existing `argparse` code needs to be replaced with `click` decorators and functions.
   - **Test**: Unit tests for the new `click`-based CLI, ensuring all arguments are parsed correctly.
   - **Subtasks**:
-    - [ ] Subtask 2.1: Convert `ptimeout`'s top-level arguments (timeout, verbose, retries, direction) to `click` options.
+    - [x] Subtask 2.1: Convert `ptimeout`'s top-level arguments (timeout, verbose, retries, direction) to `click` options.
       - **Objective**: Re-implement the main `ptimeout` command using `click.command()` and `click.option()`.
       - **Test**: Run `ptimeout --help` (after migration) and verify that all top-level options are correctly displayed.
-    - [ ] Subtask 2.2: Migrate the existing command execution logic to be compatible with `click`'s context management.
+    - [-] Subtask 2.2: Migrate the existing command execution logic to be compatible with `click`'s context management.
       - **Objective**: Adapt the `run_command_with_timeout` function to receive arguments from `click`'s parsing.
       - **Test**: Run basic `ptimeout` commands (e.g., `ptimeout 5s -- ls`) and confirm they execute correctly.
 - [ ] Task 3: Integrate nested `ptimeout` command parsing with `click` subcommands.
