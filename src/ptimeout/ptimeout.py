@@ -180,17 +180,52 @@ def run_command(
             )
 
         # Recursively call run_command for the nested ptimeout
-        # Extract timeout and options from nested args
-        nested_timeout_str = nested_args[1] if len(nested_args) > 1 else "30s"
+        # We need to parse the nested ptimeout args properly
+        # For now, use a simple approach - parse the timeout and pass through remaining
+        full_nested_args = nested_args + remaining_args
+
+        # Parse the timeout from nested args (skip 'ptimeout', find timeout string)
+        nested_timeout_str = None
+        for i, arg in enumerate(full_nested_args[1:], 1):  # Skip 'ptimeout'
+            if arg == "--":
+                # Next should be timeout if we haven't found it yet
+                if i + 1 < len(full_nested_args):
+                    potential_timeout = full_nested_args[i + 1]
+                    try:
+                        nested_timeout = parse_timeout(potential_timeout)
+                        nested_timeout_str = potential_timeout
+                        break
+                    except ValueError:
+                        continue
+            elif not arg.startswith("-") and arg != "ptimeout":
+                # This might be the timeout
+                try:
+                    nested_timeout = parse_timeout(arg)
+                    nested_timeout_str = arg
+                    break
+                except ValueError:
+                    continue
+
+        if nested_timeout_str is None:
+            nested_timeout_str = "30s"  # Default
+
         try:
             nested_timeout = parse_timeout(nested_timeout_str)
         except ValueError:
             console.print(f"[bold red]Invalid nested timeout: {nested_timeout_str}")
             return 1
 
+        # For nested ptimeout, we need to extract the actual command after the '--'
+        # Find the '--' separator in the full nested args
+        try:
+            separator_index = full_nested_args.index("--")
+            actual_command = full_nested_args[separator_index + 1 :]
+        except ValueError:
+            actual_command = remaining_args or []
+
         # Pass through the same retry and direction options for simplicity
         return run_command(
-            remaining_args or [],  # Ensure it's a list even if empty
+            actual_command,  # The actual command to run
             nested_timeout,
             retries,
             count_direction,

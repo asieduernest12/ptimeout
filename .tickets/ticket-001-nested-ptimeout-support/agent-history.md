@@ -40,9 +40,23 @@
 - ✅ All tests passed: nested detection, verbose output, non-nested commands
 - ✅ Function correctly handles nesting levels and recursive calls
 
+### 10:45 - Starting Subtask 2.2
+- 🎯 Objective: Implement robust process termination handling for nested ptimeout processes
+- 📋 Need to ensure outer timeout properly kills inner processes and vice-versa
+- 🔍 Analyzing current process management in `run_command_with_timeout()` function
+
+### 10:50 - Subtask 2.2 Complete
+- ✅ Fixed nested ptimeout argument parsing to handle flags and separators correctly
+- ✅ Verified process cleanup works with proper SIGKILL signal propagation
+- ✅ Confirmed outer timeout kills inner processes before inner timeout expires
+- ✅ Tested inner command finishing early allows outer to continue normally
+- ✅ Created simplified test file `.tmp/test_subtask_2_2_simple.py` with 4 comprehensive test cases
+- ✅ All tests passed: basic timeout, early finish, cleanup, signal handling
+- ✅ Process group isolation and signal propagation working correctly
+
 ### Notes for Future Sessions
 - Working directory: `/home/linuxdev/Desktop/workshop/studio/ptimeout`
 - Follow strict task ordering: 1.1 → 1.2 → 2.1 → 2.2 → 3.1 → 3.2
-- Subtask 2.2 next: Ensure proper process handling and termination for nested processes
+- Task 3 next: Implement verbose output for nested ptimeout execution
 - Test files in `.tmp/` directory (ignored by git)
 - Remember to commit immediately after each task passes tests

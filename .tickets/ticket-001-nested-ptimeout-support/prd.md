@@ -43,10 +43,10 @@ Implement functionality to clearly support and visually represent nested `ptimeo
   - **Problem**: The `run_command_with_timeout` function currently assumes a single command. It needs to handle the case where the command itself is another `ptimeout` instance.
   - **Test**: Run integration tests with nested `ptimeout` commands, verifying that timeouts are applied correctly at each level.
   - **Subtasks**:
-    - [-] Subtask 2.1: Modify `run_command_with_timeout` to detect and recursively call itself for nested `ptimeout` commands.
+    - [x] Subtask 2.1: Modify `run_command_with_timeout` to detect and recursively call itself for nested `ptimeout` commands.
       - **Objective**: Adjust the `run_command_with_timeout` function to check if the command to be executed is `ptimeout` and, if so, invoke itself with the inner `ptimeout`'s arguments.
       - **Test**: Use mock objects to simulate nested process execution and verify that the recursive calls are made with the correct arguments and that the outer `ptimeout` correctly monitors the inner `ptimeout`'s process.
-    - [ ] Subtask 2.2: Ensure proper process handling and termination for nested processes.
+    - [-] Subtask 2.2: Ensure proper process handling and termination for nested processes.
       - **Objective**: Implement robust logic to ensure that when an outer `ptimeout` terminates, it correctly propagates the termination signal to its child `ptimeout` process, and vice-versa.
       - **Test**: Create a scenario where the outer `ptimeout` times out, and verify that the inner `ptimeout` process (and its child command) is also terminated. Similarly, test when the inner command finishes, the outer `ptimeout` correctly proceeds.
 
