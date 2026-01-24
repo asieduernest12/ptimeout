@@ -20,7 +20,14 @@ if [ ! -d "$BUILD_VENV_DIR" ]; then
     echo "Creating temporary virtual environment for build..."
     python3 -m venv "$BUILD_VENV_DIR" || { echo "Error: Failed to create temporary virtual environment."; exit 1; }
 fi
-BUILD_VENV_PYTHON="$BUILD_VENV_DIR/bin/python"
+# Handle virtual environment paths for different OS
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS
+    BUILD_VENV_PYTHON="$BUILD_VENV_DIR/bin/python"
+else
+    # Linux and other Unix-like systems
+    BUILD_VENV_PYTHON="$BUILD_VENV_DIR/bin/python"
+fi
 
 # Activate the temporary virtual environment and install dependencies
 echo "Installing PyInstaller and application dependencies into temporary venv..."

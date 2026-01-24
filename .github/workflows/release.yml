@@ -6,9 +6,65 @@ on:
       - main
 
 jobs:
+  build-and-test:
+    name: Build and Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    # Do not run on commits that contain 'chore(skip-release)' or 'chore(skip-build)'
+    if: "!contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')"
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build Executable
+        run: |
+          echo "Building on platform: ${{ runner.os }}"
+          bash scripts/build_binary.sh
+          
+      - name: Test Binary
+        run: |
+          # Set binary name based on platform
+          BINARY_NAME=""
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            BINARY_NAME="ptimeout-linux"
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            BINARY_NAME="ptimeout-macos"
+          fi
+          
+          # Rename binary for platform identification
+          mv src/ptimeout/dist/ptimeout src/ptimeout/dist/$BINARY_NAME
+          
+          # Set environment variable for test script
+          export PTIMEOUT_BINARY="src/ptimeout/dist/$BINARY_NAME"
+          
+          # Run the integration test suite
+          echo "Running comprehensive binary integration tests on ${{ runner.os }}..."
+          timeout 120s bash tests/binary_integration_test.sh
+          
+          echo "✅ All binary integration tests passed on ${{ runner.os }}!"
+
+      - name: Upload Platform Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ptimeout-${{ runner.os }}
+          path: src/ptimeout/dist/ptimeout-*
+          retention-days: 7
+
   release:
     name: Release
     runs-on: ubuntu-latest
+    needs: build-and-test
     # Do not run on commits that contain 'chore(skip-release)' or 'chore(skip-build)'
     if: "!contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')"
     permissions:

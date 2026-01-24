@@ -12,6 +12,7 @@ import time
 from datetime import datetime
 from collections import deque
 import click
+import shutil
 
 # Exit code constants following GNU timeout conventions
 EXIT_SUCCESS = 0  # Command completed successfully within timeout
@@ -108,6 +109,9 @@ else:
 
 # Maximum lines to display in the rich output panel for live scrolling
 MAX_DISPLAY_LINES = 20
+
+# Terminal height threshold for enabling interactive scrolling
+SCROLLING_THRESHOLD_LINES = 30
 
 # Default configuration file path following XDG Base Directory Specification
 DEFAULT_CONFIG_FILE = os.path.expanduser("~/.config/ptimeout/config.ini")
@@ -229,6 +233,36 @@ def write_stream(input_data, proc_stdin):
         pass
     finally:
         proc_stdin.close()  # Important: close stdin to signal EOF to the child process
+
+
+def get_terminal_height():
+    """
+    Get the current terminal height in lines.
+
+    Returns:
+        int: Terminal height in lines, or default if cannot determine
+    """
+    try:
+        # Use shutil.get_terminal_size for cross-platform terminal size detection
+        terminal_size = shutil.get_terminal_size()
+        return terminal_size.lines
+    except (AttributeError, OSError):
+        # Fallback to a reasonable default
+        return 24
+
+
+def should_enable_scrolling(output_lines_count):
+    """
+    Determine if interactive scrolling should be enabled based on output size.
+
+    Args:
+        output_lines_count: Number of lines in the output buffer
+
+    Returns:
+        bool: True if scrolling should be enabled, False otherwise
+    """
+    terminal_height = get_terminal_height()
+    return output_lines_count > min(terminal_height - 5, SCROLLING_THRESHOLD_LINES)
 
 
 def extract_nested_ptimeout(command_args):
@@ -387,7 +421,13 @@ def run_command(
         timed_out_by_ptimeout = (
             False  # Flag to indicate if ptimeout terminated the process
         )
-        line_buffer = deque(maxlen=MAX_DISPLAY_LINES)  # Buffer for scrolling output
+        # Use unlimited list for full output buffering, but keep deque for display
+        line_buffer_full = []  # Complete output buffer for scrolling
+        line_buffer_display = deque(
+            maxlen=MAX_DISPLAY_LINES
+        )  # Display buffer for current view
+        scroll_offset = 0  # Current scroll position for large outputs
+        scrolling_enabled = False  # Flag to enable scrolling mode
         try:
             # Initialize UI components if interactive
             if is_interactive:
@@ -571,9 +611,16 @@ def run_command(
                         while not q_stdout.empty():
                             line = q_stdout.get()
                             if is_interactive:
-                                line_buffer.append(
+                                line_buffer_full.append(
                                     Text(line, style="none")
-                                )  # Store as rich Text
+                                )  # Store in full buffer
+                                line_buffer_display.append(
+                                    Text(line, style="none")
+                                )  # Add to display buffer
+                                # Check if scrolling should be enabled
+                                scrolling_enabled = should_enable_scrolling(
+                                    len(line_buffer_full)
+                                )
                             else:
                                 sys.stdout.write(line)
                                 sys.stdout.flush()
@@ -581,9 +628,16 @@ def run_command(
                         while not q_stderr.empty():
                             line = q_stderr.get()
                             if is_interactive:
-                                line_buffer.append(
+                                line_buffer_full.append(
                                     Text(line, style="red")
-                                )  # Store as rich Text
+                                )  # Store in full buffer
+                                line_buffer_display.append(
+                                    Text(line, style="red")
+                                )  # Add to display buffer
+                                # Check if scrolling should be enabled
+                                scrolling_enabled = should_enable_scrolling(
+                                    len(line_buffer_full)
+                                )
                             else:
                                 sys.stderr.write(line)
                                 sys.stderr.flush()
@@ -591,13 +645,25 @@ def run_command(
                     if is_interactive:
                         # Reconstruct output_text from buffer for scrolling effect
                         display_text = Text()
-                        for buffered_line in line_buffer:
+                        # Use display buffer when scrolling is enabled, otherwise use full buffer
+                        buffer_to_use = (
+                            line_buffer_display
+                            if scrolling_enabled
+                            else line_buffer_full
+                        )
+                        for buffered_line in buffer_to_use:
                             display_text.append(buffered_line)
+
+                        # Update title to indicate scrolling mode
+                        title = f"Output (Attempt {attempt + 1})"
+                        if scrolling_enabled:
+                            title += f" [Scrolling: {len(line_buffer_full)} lines]"
+
                         layout["main"].update(
                             Panel(
                                 display_text,
-                                border_style="green",
-                                title=f"Output (Attempt {attempt + 1})",
+                                border_style="blue" if scrolling_enabled else "green",
+                                title=title,
                             )
                         )
 
@@ -618,7 +684,16 @@ def run_command(
                     while not q_stdout.empty():
                         line = q_stdout.get()
                         if is_interactive:
-                            line_buffer.append(Text(line, style="none"))
+                            line_buffer_full.append(
+                                Text(line, style="none")
+                            )  # Store in full buffer
+                            line_buffer_display.append(
+                                Text(line, style="none")
+                            )  # Add to display buffer
+                            # Update scrolling status
+                            scrolling_enabled = should_enable_scrolling(
+                                len(line_buffer_full)
+                            )
                         else:
                             sys.stdout.write(line)
                             sys.stdout.flush()
@@ -626,20 +701,39 @@ def run_command(
                     while not q_stderr.empty():
                         line = q_stderr.get()
                         if is_interactive:
-                            line_buffer.append(Text(line, style="red"))
+                            line_buffer_full.append(
+                                Text(line, style="red")
+                            )  # Store in full buffer
+                            line_buffer_display.append(
+                                Text(line, style="red")
+                            )  # Add to display buffer
+                            # Update scrolling status
+                            scrolling_enabled = should_enable_scrolling(
+                                len(line_buffer_full)
+                            )
                         else:
                             sys.stderr.write(line)
                             sys.stderr.flush()
 
                 if is_interactive:
                     display_text = Text()
-                    for buffered_line in line_buffer:
+                    # Use display buffer when scrolling is enabled, otherwise use full buffer
+                    buffer_to_use = (
+                        line_buffer_display if scrolling_enabled else line_buffer_full
+                    )
+                    for buffered_line in buffer_to_use:
                         display_text.append(buffered_line)
+
+                    # Update title to indicate scrolling mode
+                    title = f"Output (Attempt {attempt + 1})"
+                    if scrolling_enabled:
+                        title += f" [Scrolling: {len(line_buffer_full)} lines]"
+
                     layout["main"].update(
                         Panel(
                             display_text,
-                            border_style="green",
-                            title=f"Output (Attempt {attempt + 1})",
+                            border_style="blue" if scrolling_enabled else "green",
+                            title=title,
                         )
                     )
                     live.refresh()

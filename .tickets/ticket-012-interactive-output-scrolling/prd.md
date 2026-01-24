@@ -23,24 +23,24 @@ Enhance `ptimeout`'s output mechanism to include interactive scrolling capabilit
 ## 6. Subtask Checklist
 
 #### Main Task Structure
-- [ ] Task 1: Research terminal interaction libraries for Python.
+- [x] Task 1: Research terminal interaction libraries for Python.
   - **Problem**: Need to find suitable libraries to capture key events and control terminal output.
   - **Test**: Document research findings on libraries like `curses`, `rich`, `pynput`, etc.
   - **Subtasks**:
-    - [ ] Subtask 1.1: Evaluate `curses` for its capabilities in full-screen terminal applications and key event handling.
+    - [x] Subtask 1.1: Evaluate `curses` for its capabilities in full-screen terminal applications and key event handling.
       - **Objective**: Understand `curses`'s strengths and limitations for interactive text display.
       - **Test**: Summarize findings on `curses` and its cross-platform compatibility.
-    - [ ] Subtask 1.2: Investigate alternatives like `rich` for rich text and interactive components, or lower-level input capture.
+    - [x] Subtask 1.2: Investigate alternatives like `rich` for rich text and interactive components, or lower-level input capture.
       - **Objective**: Compare features and ease of integration with `curses` or custom solutions.
       - **Test**: Document comparison and choose the most appropriate library/approach.
-- [ ] Task 2: Implement basic interactive scrolling functionality.
+- [-] Task 2: Implement basic interactive scrolling functionality.
   - **Problem**: The initial implementation needs to capture key presses and adjust the visible output.
   - **Test**: Manual testing to verify scrolling with arrow keys and exit on 'q'.
   - **Subtasks**:
-    - [ ] Subtask 2.1: Modify `ptimeout`'s output handling to buffer the command's `stdout` and `stderr`.
+    - [x] Subtask 2.1: Modify `ptimeout`'s output handling to buffer the command's `stdout` and `stderr`.
       - **Objective**: Store the entire output in memory so it can be scrolled through.
       - **Test**: Verify that large outputs are fully captured in the buffer.
-    - [ ] Subtask 2.2: Implement a simple interactive loop that reads key events and updates the display.
+    - [-] Subtask 2.2: Implement a simple interactive loop that reads key events and updates the display.
       - **Objective**: When output exceeds terminal height, present a paginated view and allow navigation.
       - **Test**: Run `ptimeout` with a command producing many lines of output (e.g., `seq 1 1000`) and verify that only a screenful is shown initially, and arrow keys scroll the content.
     - [ ] Subtask 2.3: Add an exit condition for the interactive mode (e.g., pressing 'q').
