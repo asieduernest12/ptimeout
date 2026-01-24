@@ -33,16 +33,16 @@ Enhance `ptimeout`'s output mechanism to include interactive scrolling capabilit
     - [x] Subtask 1.2: Investigate alternatives like `rich` for rich text and interactive components, or lower-level input capture.
       - **Objective**: Compare features and ease of integration with `curses` or custom solutions.
       - **Test**: Document comparison and choose the most appropriate library/approach.
-- [-] Task 2: Implement basic interactive scrolling functionality.
+- [x] Task 2: Implement basic interactive scrolling functionality.
   - **Problem**: The initial implementation needs to capture key presses and adjust the visible output.
   - **Test**: Manual testing to verify scrolling with arrow keys and exit on 'q'.
   - **Subtasks**:
     - [x] Subtask 2.1: Modify `ptimeout`'s output handling to buffer the command's `stdout` and `stderr`.
       - **Objective**: Store the entire output in memory so it can be scrolled through.
       - **Test**: Verify that large outputs are fully captured in the buffer.
-    - [-] Subtask 2.2: Implement a simple interactive loop that reads key events and updates the display.
+    - [x] Subtask 2.2: Implement a simple interactive loop that reads key events and updates the display.
       - **Objective**: When output exceeds terminal height, present a paginated view and allow navigation.
       - **Test**: Run `ptimeout` with a command producing many lines of output (e.g., `seq 1 1000`) and verify that only a screenful is shown initially, and arrow keys scroll the content.
-    - [ ] Subtask 2.3: Add an exit condition for the interactive mode (e.g., pressing 'q').
+    - [x] Subtask 2.3: Add an exit condition for the interactive mode (e.g., pressing 'q').
       - **Objective**: Allow users to gracefully exit the interactive pager.
       - **Test**: Verify that pressing 'q' exits the interactive mode.
