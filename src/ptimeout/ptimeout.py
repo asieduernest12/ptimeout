@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import configparser
 import os
 import queue
 import subprocess
@@ -105,6 +106,66 @@ else:
 
 # Maximum lines to display in the rich output panel for live scrolling
 MAX_DISPLAY_LINES = 20
+
+# Default configuration file path following XDG Base Directory Specification
+DEFAULT_CONFIG_FILE = os.path.expanduser("~/.config/ptimeout/config.ini")
+
+
+def load_config(config_path=None):
+    """
+    Load configuration from an INI file.
+
+    Args:
+        config_path: Path to the configuration file. If None, uses DEFAULT_CONFIG_FILE.
+
+    Returns:
+        dict: Dictionary containing configuration settings. Empty dict if file not found or invalid.
+    """
+    if config_path is None:
+        config_path = DEFAULT_CONFIG_FILE
+
+    config = {}
+
+    # Check if config file exists
+    if not os.path.exists(config_path):
+        return config
+
+    try:
+        parser = configparser.ConfigParser()
+        parser.read(config_path)
+
+        # Look for [defaults] section
+        if "defaults" in parser:
+            defaults_section = parser["defaults"]
+
+            # Parse timeout if present
+            if "timeout" in defaults_section:
+                config["timeout"] = defaults_section["timeout"]
+
+            # Parse retries if present
+            if "retries" in defaults_section:
+                try:
+                    config["retries"] = int(defaults_section["retries"])
+                except ValueError:
+                    # Invalid retries value, skip it
+                    pass
+
+            # Parse countdown_direction if present
+            if "countdown_direction" in defaults_section:
+                direction = defaults_section["countdown_direction"].lower()
+                if direction in ["up", "down"]:
+                    config["countdown_direction"] = direction
+
+            # Parse verbose if present
+            if "verbose" in defaults_section:
+                verbose_str = defaults_section["verbose"].lower()
+                config["verbose"] = verbose_str in ["true", "1", "yes", "on"]
+
+    except (configparser.Error, IOError):
+        # If config file is malformed or unreadable, return empty config
+        pass
+
+    return config
 
 
 def read_stream(stream, q):
@@ -578,6 +639,7 @@ def validate_command_separators(argv, is_piped_input=False):
 
     Args:
         argv: The original command line arguments (sys.argv)
+        config: Configuration dictionary to check for timeout from config
         is_piped_input: Whether stdin is being piped in
 
     Returns:
@@ -707,6 +769,9 @@ def get_version():
 
 
 def main():
+    # Load configuration from file
+    config = load_config()
+
     parser = argparse.ArgumentParser(
         description="Run a command with a time-based progress bar, or process piped input with a timeout.",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -721,17 +786,21 @@ def main():
     parser.add_argument(
         "timeout_arg",
         type=str,
-        help="The maximum execution time. Use optional suffixes: s (seconds), m (minutes), h (hours). E.g., '10s', '5m', '1h'.",
+        help="The maximum execution time. Use optional suffixes: s (seconds), m (minutes), h (hours). E.g., '10s', '5m', '1h'. Can be set in config file.",
     )
 
     parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable verbose output."
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=config.get("verbose", False),
+        help="Enable verbose output.",
     )
     parser.add_argument(
         "-r",
         "--retries",
         type=int,
-        default=0,
+        default=config.get("retries", 0),
         help="Max number of times to retry the command upon failure. Defaults to 0.",
     )
     parser.add_argument(
@@ -739,7 +808,7 @@ def main():
         "--count-direction",
         type=str,
         choices=["up", "down"],
-        default="up",
+        default=config.get("countdown_direction", "up"),
         help="Specify count direction: 'up' to count elapsed time (default), 'down' to count remaining time.",
     )
 
@@ -793,11 +862,18 @@ def main():
             parser.error("The 'COMMAND' argument is required, preceded by '--'.")
 
     # Validate timeout_arg
-    if args.timeout_arg is None:
-        parser.error("The 'TIMEOUT' argument is required.")
+    # If timeout_arg is None, try to get from config
+    timeout_arg = args.timeout_arg
+    if timeout_arg is None:
+        timeout_arg = config.get("timeout")
+
+    if timeout_arg is None:
+        parser.error(
+            "The 'TIMEOUT' argument is required (either on command line or in config file)."
+        )
 
     try:
-        timeout_seconds = parse_timeout(args.timeout_arg)
+        timeout_seconds = parse_timeout(timeout_arg)
     except ValueError as e:
         parser.error(str(e))
 

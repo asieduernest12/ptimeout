@@ -27,19 +27,19 @@ Introduce a configuration file (e.g., `~/.config/ptimeout/config.ini` or similar
   - **Problem**: Need to decide on a file format (e.g., INI, YAML, JSON) and a standard location for the configuration file.
   - **Test**: Document the chosen format and location.
   - **Subtasks**:
-    - [ ] Subtask 1.1: Research common configuration file formats and their associated Python libraries.
+    - [x] Subtask 1.1: Research common configuration file formats and their associated Python libraries.
       - **Objective**: Select a user-friendly and easy-to-parse format.
       - **Test**: Document the pros and cons of different formats.
-    - [ ] Subtask 1.2: Define the default path for the configuration file (e.g., `~/.config/ptimeout/config.ini`).
+    - [x] Subtask 1.2: Define the default path for the configuration file (e.g., `~/.config/ptimeout/config.ini`).
       - **Objective**: Ensure the default path follows common conventions for user-specific configuration.
       - **Test**: Add a constant for the default configuration file path in the code.
-- [ ] Task 2: Implement logic to load and apply configuration from the file.
+- [x] Task 2: Implement logic to load and apply configuration from the file.
   - **Problem**: The `ptimeout` application needs to read the configuration file and apply its settings before parsing command-line arguments.
   - **Test**: Unit and integration tests for loading configurations and ensuring correct precedence.
   - **Subtasks**:
-    - [ ] Subtask 2.1: Develop a function to read and parse the configuration file.
+    - [x] Subtask 2.1: Develop a function to read and parse the configuration file.
       - **Objective**: Create a function that, given a file path, reads and returns a dictionary of configuration settings.
       - **Test**: Test this function with valid and invalid configuration file content.
-    - [ ] Subtask 2.2: Integrate configuration loading into `ptimeout`'s main execution flow.
+    - [x] Subtask 2.2: Integrate configuration loading into `ptimeout`'s main execution flow.
       - **Objective**: Modify the main script to load defaults from the config file before `argparse` processes command-line arguments, ensuring command-line overrides.
       - **Test**: Run `ptimeout` with and without a configuration file, and verify that defaults are applied correctly and overridden by CLI arguments.
