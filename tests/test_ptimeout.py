@@ -123,7 +123,7 @@ class TestPtimeout(unittest.TestCase):
         stdout, stderr, return_code = self.run_command_helper("1x", ["true"])
         self.assertNotEqual(return_code, 0)
         self.assertIn(
-            "error: Invalid time unit: 'x' in '1x'. Use 's', 'm', or 'h'. Example: ptimeout 30s -- echo hello",
+            "Error: Invalid time unit: 'x' in '1x'. Use 's', 'm', or 'h'. Example: ptimeout 30s -- echo hello",
             stderr,
         )
 
@@ -131,14 +131,14 @@ class TestPtimeout(unittest.TestCase):
         stdout, stderr, return_code = self.run_command_helper("abc", ["true"])
         self.assertNotEqual(return_code, 0)
         self.assertIn(
-            "error: Invalid timeout format: 'abc'. The numeric part must be a positive integer. Example: ptimeout 30s -- echo hello",
+            "Error: Invalid timeout format: 'abc'. The numeric part must be a positive integer. Example: ptimeout 30s -- echo hello",
             stderr,
         )
 
     def test_missing_timeout_argument(self):
         stdout, stderr, return_code = self.run_command_helper(None, ["true"])
         self.assertNotEqual(return_code, 0)
-        self.assertIn("error: The 'TIMEOUT' argument is required.", stderr)
+        self.assertIn("Error: The 'TIMEOUT' argument is required.", stderr)
 
     def test_version_flag(self):
         # Construct the command parts for ptimeout
@@ -171,7 +171,7 @@ class TestPtimeout(unittest.TestCase):
             "1s", ["echo", "test"], extra_args=["-r", "-1"]
         )
         self.assertNotEqual(return_code, 0)
-        self.assertIn("error: Retries must be a non-negative integer", stderr)
+        self.assertIn("Retries must be a non-negative integer, got: -1", stderr)
 
     def test_retries_valid(self):
         """Test that valid retries work correctly"""
@@ -188,7 +188,7 @@ class TestPtimeout(unittest.TestCase):
         )
         self.assertNotEqual(return_code, 0)
         self.assertIn(
-            "error: argument -d/--count-direction: invalid choice: 'invalid' (choose from 'up', 'down')",
+            "Error: Invalid value for '-d' / '--count-direction': 'invalid' is not one of 'up', 'down'.",
             stderr,
         )
 

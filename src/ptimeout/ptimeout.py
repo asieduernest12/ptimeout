@@ -1262,7 +1262,9 @@ def get_version():
 @click.option(
     "--version",
     is_flag=True,
-    callback=lambda ctx, param, value: click.echo(get_version()) if value else None,
+    callback=lambda ctx, param, value: (click.echo(get_version()) or sys.exit(0))
+    if value
+    else None,
     expose_value=False,
     is_eager=True,
     help="Show version and exit.",
