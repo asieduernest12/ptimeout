@@ -7,7 +7,7 @@ services:
     volumes:
       - ./src:/app/src
       - ./scripts:/app/scripts
-      - ./ptimeout/dist:/app/ptimeout/dist
+      - ./src/ptimeout/dist:/app/src/ptimeout/dist
   
   test:
     build: .
