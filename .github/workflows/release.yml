@@ -51,72 +51,23 @@ jobs:
           git add version.txt
           git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]" || echo "No changes to commit"
 
-     
-  build-and-test:
-    name: Build and Test
-    runs-on: ubuntu-latest
-    needs: version-bump # Now depends on version-bump as test job is removed
-    # Do not run on commits that contain 'chore(skip-release)' or 'chore(skip-build)'
-    if: "!contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')"
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Build Executable with Docker
         run: docker compose run --rm dev bash scripts/build_binary.sh
           
       - name: Test Binary with Docker
         run: make test
 
-      - name: Upload Linux Binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: ptimeout-linux
-          path: src/ptimeout/dist/ptimeout
-          retention-days: 7
-
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    # Do not run on commits that contain 'chore(skip-release)' or 'chore(skip-build)'
-    if: "github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')"
-    permissions:
-      contents: write
-      pull-requests: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get Version from file
-        id: get_version
-        run: |
-          echo "NEW_VERSION=$(cat version.txt)" >> $GITHUB_ENV
-          echo "TAG_NAME=v$(cat version.txt)" >> $GITHUB_ENV
-
-      - name: Download Linux binary
-        uses: actions/download-artifact@v4
-        with:
-          name: ptimeout-linux
-          path: dist/
-
       - name: Push changes
+        if: "github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')"
         run: |
           git push origin main
           if [[ "${{ github.event.head_commit.message }}" != *"chore(skip-tag)"* ]]; then
             git push origin ${{ env.TAG_NAME }}
           fi
 
-
       - name: Create GitHub Release
         id: create_release
+        if: "github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')"
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
@@ -127,3 +78,5 @@ jobs:
           draft: false
           prerelease: false
           files: dist/ptimeout
+
+     
