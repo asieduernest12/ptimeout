@@ -2,71 +2,15 @@ name: Release & Version Bump
 
 on:
   push:
-    branches:
-      - main
+    #branches:
+    #  - main # Only run on main branch pushes
 
 jobs:
-  build-and-test:
-    name: Build and Test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    # Do not run on commits that contain 'chore(skip-release)' or 'chore(skip-build)'
-    if: "!contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')"
-    
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Build Executable
-        run: |
-          echo "Building on platform: ${{ runner.os }}"
-          bash scripts/build_binary.sh
-          
-      - name: Test Binary
-        run: |
-          # Set binary name based on platform
-          BINARY_NAME=""
-          if [[ "${{ runner.os }}" == "Linux" ]]; then
-            BINARY_NAME="ptimeout-linux"
-          elif [[ "${{ runner.os }}" == "macOS" ]]; then
-            BINARY_NAME="ptimeout-macos"
-          fi
-          
-          # Rename binary for platform identification
-          mv src/ptimeout/dist/ptimeout src/ptimeout/dist/$BINARY_NAME
-          
-          # Set environment variable for test script
-          export PTIMEOUT_BINARY="src/ptimeout/dist/$BINARY_NAME"
-          
-          # Run the integration test suite
-          echo "Running comprehensive binary integration tests on ${{ runner.os }}..."
-          timeout 120s bash tests/binary_integration_test.sh
-          
-          echo "✅ All binary integration tests passed on ${{ runner.os }}!"
-
-      - name: Upload Platform Binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: ptimeout-${{ runner.os }}
-          path: src/ptimeout/dist/ptimeout-*
-          retention-days: 7
-
-  release:
-    name: Release
+  version-bump:
+    name: Bump Version
     runs-on: ubuntu-latest
-    needs: build-and-test
-    # Do not run on commits that contain 'chore(skip-release)' or 'chore(skip-build)'
-    if: "!contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')"
+    # Only run on pushes to main, and not if the commit message contains 'chore(skip-release)' or 'chore(skip-bump)'
+    if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-bump)')
     permissions:
       contents: write
       pull-requests: write
@@ -86,28 +30,19 @@ jobs:
       - name: Install commit-and-tag-version
         run: npm install -g commit-and-tag-version
 
-
       - name: Configure Git User
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-
       - name: Bump version and create changelog
         id: bump
         run: |
-          # Default command
-          cmd="commit-and-tag-version --skip.changelog"
-          
-          # If the commit message contains 'chore(skip-tag)', add the skip tag flag
+          cmd="commit-and-tag-version"
           if [[ "${{ github.event.head_commit.message }}" == *"chore(skip-tag)"* ]]; then
             cmd="$cmd --skip.tag"
           fi
-          
-          # Execute the command
           $cmd
-          
-          # Set environment variables for later steps
           echo "NEW_VERSION=$(cat version.txt)" >> $GITHUB_ENV
           echo "TAG_NAME=v$(cat version.txt)" >> $GITHUB_ENV
 
@@ -116,25 +51,69 @@ jobs:
           git add version.txt
           git commit -m "chore(release): bump version to ${{ env.NEW_VERSION }} [skip ci]" || echo "No changes to commit"
 
+     
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: version-bump # Now depends on version-bump as test job is removed
+    # Do not run on commits that contain 'chore(skip-release)' or 'chore(skip-build)'
+    if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build Executable with Docker
+        run: docker compose run --rm dev bash scripts/build_binary.sh
+          
+      - name: Test Binary with Docker
+        run: docker compose run --rm dev bash tests/binary_integration_test.sh
+
+      - name: Upload Linux Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ptimeout-linux
+          path: src/ptimeout/dist/ptimeout-Linux-*
+          retention-days: 7
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    # Do not run on commits that contain 'chore(skip-release)' or 'chore(skip-build)'
+    if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get Version from file
+        id: get_version
+        run: |
+          echo "NEW_VERSION=$(cat version.txt)" >> $GITHUB_ENV
+          echo "TAG_NAME=v$(cat version.txt)" >> $GITHUB_ENV
+
+      - name: Download Linux binary
+        uses: actions/download-artifact@v4
+        with:
+          name: ptimeout-linux
+          path: dist/
+
       - name: Push changes
         run: |
-          # Push the commit and the tag in one go
           git push origin main
-          # Only push the tag if it was created
           if [[ "${{ github.event.head_commit.message }}" != *"chore(skip-tag)"* ]]; then
             git push origin ${{ env.TAG_NAME }}
           fi
-      
-      # --- Build and Release Executable ---
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Build Executable
-        run: bash scripts/build_binary.sh
-        # The executable will be in src/ptimeout/dist/ptimeout
 
       - name: Create GitHub Release
         id: create_release
@@ -147,4 +126,4 @@ jobs:
             See changes in commit history.
           draft: false
           prerelease: false
-          files: src/ptimeout/dist/ptimeout # Corrected path to the executable
+          files: dist/ptimeout-Linux-*
