@@ -10,7 +10,7 @@ jobs:
     name: Bump Version
     runs-on: ubuntu-latest
     # Only run on pushes to main, and not if the commit message contains 'chore(skip-release)' or 'chore(skip-bump)'
-    if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-bump)')
+    if: !contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-bump)')
     permissions:
       contents: write
       pull-requests: write
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: version-bump # Now depends on version-bump as test job is removed
     # Do not run on commits that contain 'chore(skip-release)' or 'chore(skip-build)'
-    if: github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')
+    if:  !contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')
     
     steps:
       - name: Checkout
