@@ -69,7 +69,7 @@ jobs:
         run: docker compose run --rm dev bash scripts/build_binary.sh
           
       - name: Test Binary with Docker
-        run: docker compose run --rm dev bash tests/binary_integration_test.sh
+        run: make test
 
       - name: Upload Linux Binary
         uses: actions/upload-artifact@v4
