@@ -248,23 +248,17 @@ When no pending `[ ]` tasks exist across all tickets, agents MUST terminate grac
 
 ### Task Status Querying
 ```bash
-# List all pending tasks
-grep -r '[ ]' .tickets/
+# List all backlog tasks (pending or in-progress)
+bash .tickets/scripts/list_backlog_tasks.sh
+# Output: <ticket_path>:<count_of_pending_or_in_progress_tasks>
 
-# List all in-progress tasks
-grep -r '[-]' .tickets/
+# List all tickets with no pending or in-progress tasks (implying completion)
+bash .tickets/scripts/list_completed_tasks.sh
+# Output: <ticket_path>:0
 
-# List all completed tasks
-grep -r '[x]' .tickets/
-
-# List all tasks (backlog)
-grep -r '[[ x-]*]' .tickets/ | sort
-
-# List tickets and their number of backlog tasks
-find .tickets/ -name prd.md | sort | xargs -I{} echo "echo \"{}: backlog:: \$(grep -E '\[( |-)\]' {} | wc -l)\"" | bash
-
-# List the next ticket to work on (first ticket with backlog tasks)
-find .tickets/ -name prd.md | sort | xargs -I{} echo "echo \"{}: backlog:: \$(grep -E '\[( |-)]' {} | wc -l)\"" | bash | grep -v 'backlog:: 0' | head -n1
+# List the next ticket to work on (first ticket with pending or in-progress tasks)
+bash .tickets/scripts/find_next_ticket.sh
+# Output: <ticket_path>:<count_of_pending_or_in_progress_tasks>
 
 # Verify backlog exists before scanning
 find .tickets/ -name prd.md -exec grep -lE '\[( |-)\]' {} \; | wc -l
