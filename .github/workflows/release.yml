@@ -75,7 +75,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ptimeout-linux
-          path: src/ptimeout/dist/ptimeout-Linux-*
+          path: src/ptimeout/dist/ptimeout
           retention-days: 7
 
   release:
@@ -126,4 +126,4 @@ jobs:
             See changes in commit history.
           draft: false
           prerelease: false
-          files: dist/ptimeout-Linux-*
+          files: dist/ptimeout
