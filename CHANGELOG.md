@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.4](https://github.com/asieduernest12/ptimeout/compare/v0.0.3...v0.0.4) (2026-01-30)
+
+
+### Features
+
+* **ticket-015:** reorganize project structure ([04cacc6](https://github.com/asieduernest12/ptimeout/commit/04cacc6e27fd0ef4a80d8cf636989e7ea07cbee3))
+
+
+### Bug Fixes
+
+* **ticket-014:** complete pending test and docker validation tasks ([c4e0745](https://github.com/asieduernest12/ptimeout/commit/c4e0745ee187de87eeff38dc9fcb03ac8559a69b))
+* **ticket-016:** fix Docker build - Debian Bullseye EOL ([9cad74b](https://github.com/asieduernest12/ptimeout/commit/9cad74b445f138bd965638dc1fcb0e77114afd92))
+
 ## [0.0.3](https://github.com/asieduernest12/ptimeout/compare/v0.0.2...v0.0.3) (2026-01-29)
 
 
