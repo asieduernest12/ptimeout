@@ -13,7 +13,7 @@ def test_dry_run_argument_parsing():
     print("Testing --dry-run argument parsing...")
 
     # Test 1: Check that --dry-run flag is recognized (should not show error)
-    cmd = [sys.executable, "src/ptimeout/ptimeout.py", "--help"]
+    cmd = [sys.executable, "src/ptimeout.py", "--help"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         if "--dry-run" in result.stdout:
@@ -28,7 +28,7 @@ def test_dry_run_argument_parsing():
     # Test 2: Check that --dry-run is accepted without errors
     cmd = [
         sys.executable,
-        "src/ptimeout/ptimeout.py",
+        "src/ptimeout.py",
         "--dry-run",
         "5s",
         "--",
@@ -53,7 +53,7 @@ def test_dry_run_argument_parsing():
     # Test 3: Check that dry_run attribute is set (we'll verify this works by checking no execution)
     cmd = [
         sys.executable,
-        "src/ptimeout/ptimeout.py",
+        "src/ptimeout.py",
         "--dry-run",
         "5s",
         "--",
@@ -75,7 +75,7 @@ def test_dry_run_argument_parsing():
         return False
 
     # Test 4: Check default behavior (without --dry-run)
-    cmd = [sys.executable, "src/ptimeout/ptimeout.py", "1s", "--", "echo", "normal_run"]
+    cmd = [sys.executable, "src/ptimeout.py", "1s", "--", "echo", "normal_run"]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         # Without --dry-run, "normal_run" should be executed

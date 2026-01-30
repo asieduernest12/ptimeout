@@ -33,7 +33,7 @@ def test_no_orphaned_processes():
     print(f"Initial sleep processes: {len(initial_processes)}")
 
     # Start ptimeout with a long-running sleep command
-    cmd = [sys.executable, "src/ptimeout/ptimeout.py", "30s", "--", "sleep", "30"]
+    cmd = [sys.executable, "src/ptimeout.py", "30s", "--", "sleep", "30"]
 
     print(f"Starting command: {' '.join(cmd)}")
 
@@ -126,7 +126,7 @@ def test_resource_cleanup():
     print(f"Initial ptimeout temp files: {len(initial_files)}")
 
     # Start and terminate ptimeout
-    cmd = [sys.executable, "src/ptimeout/ptimeout.py", "10s", "--", "echo", "test"]
+    cmd = [sys.executable, "src/ptimeout.py", "10s", "--", "echo", "test"]
 
     proc = None
     try:

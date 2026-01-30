@@ -17,7 +17,7 @@ def test_signal_termination():
     print("Testing signal termination with long-running command...")
 
     # Start a ptimeout process that runs sleep for 30 seconds
-    cmd = [sys.executable, "src/ptimeout/ptimeout.py", "30s", "--", "sleep", "30"]
+    cmd = [sys.executable, "src/ptimeout.py", "30s", "--", "sleep", "30"]
 
     print(f"Starting command: {' '.join(cmd)}")
 
@@ -78,7 +78,7 @@ def test_sigint_termination():
     print("\nTesting SIGINT termination...")
 
     # Start a ptimeout process that runs sleep for 30 seconds
-    cmd = [sys.executable, "src/ptimeout/ptimeout.py", "30s", "--", "sleep", "30"]
+    cmd = [sys.executable, "src/ptimeout.py", "30s", "--", "sleep", "30"]
 
     print(f"Starting command: {' '.join(cmd)}")
 

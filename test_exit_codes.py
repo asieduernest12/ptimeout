@@ -37,7 +37,7 @@ def main():
     # Change to the project directory
     os.chdir("/home/linuxdev/Desktop/workshop/studio/ptimeout")
 
-    ptimeout_path = "src/ptimeout/ptimeout.py"
+    ptimeout_path = "src/ptimeout.py"
 
     tests = [
         # Test success

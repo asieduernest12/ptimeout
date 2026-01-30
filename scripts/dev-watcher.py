@@ -82,7 +82,7 @@ class DevWatcher(FileSystemEventHandler):
             # Reinstall dependencies
             self.console.print("   📦 Reinstalling dependencies...", style="dim")
             result = subprocess.run(
-                ["pip", "install", "-r", "src/ptimeout/requirements.txt"],
+                ["pip", "install", "-r", "src/requirements.txt"],
                 capture_output=True,
                 text=True,
             )
@@ -177,7 +177,7 @@ class DevWatcherApp:
         # Install dependencies
         self.console.print("📦 Installing dependencies...", style="blue")
         result = subprocess.run(
-            ["pip", "install", "-r", "src/ptimeout/requirements.txt"],
+            ["pip", "install", "-r", "src/requirements.txt"],
             capture_output=True,
             text=True,
         )
@@ -218,7 +218,7 @@ class DevWatcherApp:
 
         # Setup observer
         self.observer = Observer()
-        watch_paths = ["/app/src/ptimeout", "/app/scripts"]
+        watch_paths = ["/app/src", "/app/scripts"]
 
         for path in watch_paths:
             if os.path.exists(path):

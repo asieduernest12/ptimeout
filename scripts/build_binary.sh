@@ -7,12 +7,12 @@ echo "Building ptimeout binary..."
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_ROOT="$SCRIPT_DIR/../" # Go up one level from 'scripts'
-PTIMEOUT_MODULE_DIR="$PROJECT_ROOT/src/ptimeout" 
+PTIMEOUT_MODULE_DIR="$PROJECT_ROOT/src" 
 PTIMEOUT_SCRIPT="$PTIMEOUT_MODULE_DIR/ptimeout.py"
 
-# Define paths for the build artifacts
-DIST_DIR="$PTIMEOUT_MODULE_DIR/dist"
-BUILD_DIR="$PTIMEOUT_MODULE_DIR/build"
+# Define paths for the build artifacts (now at project root)
+DIST_DIR="$PROJECT_ROOT/dist"
+BUILD_DIR="$PROJECT_ROOT/build"
 
 # Create a temporary virtual environment for the build process
 BUILD_VENV_DIR="$PROJECT_ROOT/.build_venv" # Temporary venv in project root

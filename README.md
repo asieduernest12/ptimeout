@@ -36,7 +36,7 @@ A robust command-line utility designed to execute other commands with a predefin
 
 To install `ptimeout` on your local system, ensuring it's available globally:
 
-1.  **Build the standalone binary:** The `ptimeout` binary needs to be built first. The `make build-binary` command now handles this by building the binary inside a Docker container for compatibility and placing it in `src/ptimeout/dist`.
+1.  **Build the standalone binary:** The `ptimeout` binary needs to be built first. The `make build-binary` command now handles this by building the binary inside a Docker container for compatibility and placing it in `./dist`.
     ```bash
     make build-binary
     ```
@@ -58,7 +58,7 @@ You can also install `ptimeout` into an *already running* Docker container for a
     ```bash
     make build-binary
     ```
-    This ensures the `src/ptimeout/dist/ptimeout` binary exists on your host.
+    This ensures the `./dist/ptimeout` binary exists on your host.
 
 2.  **Run the `install-into-running-container` make target:**
     This command will automatically find a running `dev` container (if one exists and was started with `docker compose run --rm -d dev bash`) and install `ptimeout` into it.
@@ -101,10 +101,10 @@ make build-binary
 This command performs the build process inside a temporary Docker container based on the project's `dev` image. This ensures `glibc` compatibility and a consistent build environment, regardless of your host system. The process involves:
 
 1.  Creating a temporary Python virtual environment *inside the Docker container*.
-2.  Installing PyInstaller and the project's dependencies (`src/ptimeout/requirements.txt`) into that virtual environment.
+2.  Installing PyInstaller and the project's dependencies (`src/requirements.txt`) into that virtual environment.
 3.  Utilizing PyInstaller to package the `ptimeout` executable.
 
-The final binary will be extracted from the temporary container and placed in your host's `src/ptimeout/dist` directory. Intermediate build files are handled within the temporary container and cleaned up automatically.
+The final binary will be extracted from the temporary container and placed in your host's `./dist` directory. Intermediate build files are handled within the temporary container and cleaned up automatically.
 
 ## Usage
 
@@ -345,7 +345,7 @@ This project leverages Docker Compose to establish a consistent and isolated dev
     ```
     Once inside the container, you can run the Python script:
     ```bash
-    python src/ptimeout/ptimeout.py 5s -- echo "Hello from container!"
+    python src/ptimeout.py 5s -- echo "Hello from container!"
     ```
 
     You can also use the `ptimeout` binary you built and installed into the container (if you used `make install-into-running-container`):

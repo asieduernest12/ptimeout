@@ -15,7 +15,7 @@ def test_dry_run_basic():
     # Test basic command
     cmd = [
         sys.executable,
-        "src/ptimeout/ptimeout.py",
+        "src/ptimeout.py",
         "--dry-run",
         "5s",
         "--",
@@ -47,12 +47,12 @@ def test_dry_run_nested():
     # Test nested ptimeout command
     cmd = [
         sys.executable,
-        "src/ptimeout/ptimeout.py",
+        "src/ptimeout.py",
         "--dry-run",
         "5s",
         "--",
         sys.executable,
-        "src/ptimeout/ptimeout.py",
+        "src/ptimeout.py",
         "3s",
         "--",
         "ls",
@@ -82,7 +82,7 @@ def test_dry_run_with_options():
     # Test with verbose and retries
     cmd = [
         sys.executable,
-        "src/ptimeout/ptimeout.py",
+        "src/ptimeout.py",
         "--dry-run",
         "-v",
         "-r",
@@ -142,7 +142,7 @@ def test_no_execution():
     test_file = "/tmp/dry_run_test.txt"
     cmd = [
         sys.executable,
-        "src/ptimeout/ptimeout.py",
+        "src/ptimeout.py",
         "--dry-run",
         "5s",
         "--",

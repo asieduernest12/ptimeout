@@ -27,7 +27,7 @@ if [ -n "$1" ]; then
     echo "Using provided binary path: $BINARY_PATH"
 else
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-    BINARY_PATH="$SCRIPT_DIR/../src/ptimeout/dist/ptimeout"
+    BINARY_PATH="$SCRIPT_DIR/../dist/ptimeout"
     echo "Using default binary path: $BINARY_PATH"
 fi
 
