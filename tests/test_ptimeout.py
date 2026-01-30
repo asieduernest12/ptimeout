@@ -16,7 +16,7 @@ class TestPtimeout(unittest.TestCase):
         # Construct the command parts for ptimeout
         ptimeout_cmd_parts = [
             sys.executable,
-            os.path.join("/app", "src", "ptimeout", "ptimeout.py"),
+            os.path.join("/app", "src", "ptimeout.py"),
         ]
 
         # Add any extra arguments like -r, -d, -v (these must come before timeout)
@@ -144,7 +144,7 @@ class TestPtimeout(unittest.TestCase):
         # Construct the command parts for ptimeout
         ptimeout_cmd_parts = [
             sys.executable,
-            os.path.join("/app", "src", "ptimeout", "ptimeout.py"),
+            os.path.join("/app", "src", "ptimeout.py"),
             "--version",
         ]
 

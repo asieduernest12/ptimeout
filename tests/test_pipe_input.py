@@ -11,7 +11,7 @@ class TestPipeInput(unittest.TestCase):
         # Use the absolute path inside the Docker container
         cmd = [
             sys.executable,
-            os.path.join("/app", "src", "ptimeout", "ptimeout.py"),
+            os.path.join("/app", "src", "ptimeout.py"),
             timeout_arg,
         ]
         if command_args:

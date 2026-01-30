@@ -1251,7 +1251,7 @@ def get_version():
     """Reads version from version.txt file."""
     try:
         with open(
-            os.path.join(os.path.dirname(__file__), "..", "..", "version.txt"), "r"
+            os.path.join(os.path.dirname(__file__), "..", "version.txt"), "r"
         ) as f:
             return f.read().strip()
     except FileNotFoundError:
