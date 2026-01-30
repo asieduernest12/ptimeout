@@ -8,12 +8,12 @@ import sys
 import os
 
 # Add src to path so we can import ptimeout
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "src"))
 
 try:
-    from ptimeout.ptimeout import register_signal_handlers
+    from ptimeout import register_signal_handlers
 
-    print("✓ Successfully imported register_signal_handlers function")
+    print("Successfully imported register_signal_handlers function")
 except ImportError as e:
     print(f"✗ Failed to import register_signal_handlers: {e}")
     sys.exit(1)
