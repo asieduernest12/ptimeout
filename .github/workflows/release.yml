@@ -77,6 +77,6 @@ jobs:
             See changes in commit history.
           draft: false
           prerelease: false
-          files: dist/ptimeout
+          files: src/ptimeout/dist/ptimeout
 
      

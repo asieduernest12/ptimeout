@@ -17,7 +17,7 @@ TESTS_PASSED=0
 TESTS_FAILED=0
 
 # Binary path (can be overridden with environment variable)
-PTIMEOUT_BINARY="${PTIMEOUT_BINARY:-./src/ptimeout/dist/ptimeout}"
+PTIMEOUT_BINARY="${PTIMEOUT_BINARY:-./dist/ptimeout}"
 
 # Helper functions
 print_test() {
@@ -133,8 +133,8 @@ run_test "Invalid timeout argument" 2 "$PTIMEOUT_BINARY invalid_timeout -- echo 
 run_test "Missing separator for nested command" 2 "$PTIMEOUT_BINARY 5s echo 'Should fail'"
 
 # Test 16: Config file support (if default config exists)
-if [ -f "./src/ptimeout/config.yaml" ]; then
-    run_test "Config file support" 0 "$PTIMEOUT_BINARY --config ./src/ptimeout/config.yaml 3s -- echo 'Config test'"
+if [ -f "./src/config.yaml" ]; then
+    run_test "Config file support" 0 "$PTIMEOUT_BINARY --config ./src/config.yaml 3s -- echo 'Config test'"
 fi
 
 # Test results

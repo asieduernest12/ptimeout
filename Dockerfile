@@ -1,5 +1,5 @@
 # Use a lightweight Python base image
-FROM python:3.10-slim-bullseye
+FROM python:3.10-slim-bookworm
 
 # Set the working directory in the container
 WORKDIR /app
@@ -8,12 +8,12 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y make binutils && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements.txt and install dependencies
-COPY src/ptimeout/requirements.txt ./src/ptimeout/
-RUN pip install --no-cache-dir -r src/ptimeout/requirements.txt
+COPY src/requirements.txt ./src/
+RUN pip install --no-cache-dir -r src/requirements.txt
 
 # Copy application source code with proper ownership for watch mode
-COPY --chown=root:root src/ptimeout/ptimeout.py ./src/ptimeout/
-COPY --chown=root:root src/ptimeout/ptimeout_systemd.py ./src/ptimeout/
+COPY --chown=root:root src/ptimeout.py ./src/
+COPY --chown=root:root src/ptimeout_systemd.py ./src/
 
 # Copy tests
 COPY --chown=root:root tests/ ./tests/
@@ -25,7 +25,7 @@ COPY --chown=root:root scripts/ ./scripts/
 RUN apt-get update && apt-get install -y python3-venv --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 # Build the standalone binary inside the container
-# This will create src/ptimeout/dist/ptimeout
+# This will create dist/ptimeout
 RUN bash scripts/build_binary.sh
 
 # Install the binary inside the container, creating a symlink in /usr/local/bin

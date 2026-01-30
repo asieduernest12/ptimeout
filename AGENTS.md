@@ -38,7 +38,7 @@ To build a standalone executable binary of `ptimeout` for your system:
 bash scripts/build_binary.sh
 ```
 
-This script will create a temporary Python virtual environment, install PyInstaller and the project's dependencies (`src/ptimeout/requirements.txt`) into it, then use PyInstaller to build the `ptimeout` executable. The resulting binary will be placed in the `src/ptimeout/dist` directory, and intermediate build files in `src/ptimeout/build`. Finally, the temporary virtual environment will be cleaned up. This self-contained process ensures a clean build environment.
+This script will create a temporary Python virtual environment, install PyInstaller and the project's dependencies (`src/requirements.txt`) into it, then use PyInstaller to build the `ptimeout` executable. The resulting binary will be placed in the `./dist` directory, and intermediate build files in `./build`. Finally, the temporary virtual environment will be cleaned up. This self-contained process ensures a clean build environment.
 
 ## Usage
 
@@ -129,11 +129,11 @@ The project uses Docker Compose to set up a consistent development and testing e
     ```
     This mounts your local project directory into the container, allowing for live code changes. The `--rm` flag ensures the container is removed after you exit.
 
-3.  **Building the standalone binary:**
+3.      **Building the standalone binary:**
     While `scripts/build_binary.sh` handles building the standalone executable on the host, you can also perform build steps within the Docker `dev` container if needed, ensuring a consistent build environment:
-    To run the `ptimeout` application (e.g., `src/ptimeout/ptimeout.py`) directly from your development container:
+    To run the `ptimeout` application (e.g., `src/ptimeout.py`) directly from your development container:
     ```bash
-    docker compose run --rm dev python ptimeout/ptimeout.py <your_arguments>
+    docker compose run --rm dev python src/ptimeout.py <your_arguments>
     ```
     Replace `<your_arguments>` with any command-line arguments `ptimeout` expects.
 
@@ -142,7 +142,7 @@ The project uses Docker Compose to set up a consistent development and testing e
 While `scripts/build_binary.sh` handles building the standalone executable on the host, you can also perform build steps within the Docker `dev` container if needed, ensuring a consistent build environment:
 
 ```bash
-docker compose run --rm dev bash -c "python -m PyInstaller --onefile src/ptimeout/ptimeout.py && cp dist/ptimeout /app/src/ptimeout/dist/"
+docker compose run --rm dev bash -c "python -m PyInstaller --onefile src/ptimeout.py && cp dist/ptimeout /app/dist/"
 ```
 *Note: This example demonstrates running PyInstaller within the container. Adjust the command as per your specific build requirements.*
 
@@ -163,7 +163,7 @@ This command runs the `test` service, which is configured to execute the project
 ## Development Conventions
 
 *   **Language:** Python
-*   **Dependency Management:** Project dependencies are managed via `src/ptimeout/requirements.txt`.
+*   **Dependency Management:** Project dependencies are managed via `src/requirements.txt`.
 *   **Containerization:** Development, building, and testing are primarily performed within Docker containers to ensure environment consistency and isolate the development environment from the host system. **IT IS ABSOLUTELY FORBIDDEN TO WORK OUTSIDE OF THE DEV CONTAINER.**
 *   **Scripting:** Shell scripts (`.sh` files) in the `scripts/` directory are used for installation, uninstallation, and binary building automation.
 *   **Versioning:** The project uses [`commit-and-tag-version`](https://www.npmjs.com/package/commit-and-tag-version) for automated versioning based on commit messages, following Conventional Commits specification.
